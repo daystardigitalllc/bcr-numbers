@@ -36,6 +36,8 @@ jobs:
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           SMTP_USER: ${{ vars.SMTP_USER }}
           SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_HOST: ${{ vars.SMTP_HOST }}
+          SMTP_PORT: ${{ vars.SMTP_PORT }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           REPORT_FROM: ${{ vars.REPORT_FROM }}
           REPORT_TO: ${{ vars.REPORT_TO }}

@@ -73,6 +73,15 @@ One-time setup, in the GitHub repo -> Settings -> Secrets and variables -> Actio
 
 Gmail allows ~500 emails/day per account, far more than needed.
 
+**Not Gmail? Any provider with SMTP works** - set `SMTP_USER`, `SMTP_PASS`, plus `SMTP_HOST` (and `SMTP_PORT` if not 465):
+
+| Provider | `SMTP_HOST` | `SMTP_PORT` | `SMTP_USER` / `SMTP_PASS` |
+|---|---|---|---|
+| Yahoo Mail (free) | `smtp.mail.yahoo.com` | 465 (default) | full Yahoo address / an app password (Account Security -> Generate app password) |
+| Brevo (free, 300/day) | `smtp-relay.brevo.com` | `587` | Brevo login email / an SMTP key; also set variable `REPORT_FROM` to a sender address verified in Brevo |
+
+(Zoho's free plan does not allow SMTP, so it can't be used.)
+
 **Or Resend** (needs a verified domain): set secret `RESEND_API_KEY` and variable `REPORT_FROM` instead of the two `SMTP_*` entries.
 
 The workflow must be on the repository's **default branch** for the schedule and the "Run workflow" button to work.
