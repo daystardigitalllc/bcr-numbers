@@ -82,7 +82,7 @@ function summaryImage(d, logoDataUri) {
   let body = logo(logoDataUri, (W - 230 * LOGO_RATIO) / 2, 30, 230);
   body += text(W / 2, 340, prettyDate(d.date), { size: 66, weight: 700, anchor: 'middle', spacing: 3 });
   body += `<rect x="${W / 2 - 80}" y="364" width="160" height="7" rx="3.5" fill="${COLORS.red}"/>`;
-  body += text(W / 2, 424, `${d.branches.length} BRANCHES REPORTING`, { size: 34, weight: 600, fill: COLORS.mute, anchor: 'middle', spacing: 5 });
+  body += text(W / 2, 424, (d.reported ?? d.branches.length) < d.branches.length ? `${d.reported} OF ${d.branches.length} BRANCHES REPORTING` : `${d.branches.length} BRANCHES REPORTING`, { size: 34, weight: 600, fill: COLORS.mute, anchor: 'middle', spacing: 5 });
   let y = 470;
   const gap = 28;
   const cards = [totalsCard(y, 'DAILY TOTALS', d.daily)];

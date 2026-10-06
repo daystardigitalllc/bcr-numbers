@@ -45,12 +45,38 @@ test/              npm test  (runs the real schema.sql + queries against SQLite)
 Every push to the connected branch redeploys automatically. Backups: D1 has built-in Time Travel
 (`npx wrangler d1 time-travel info bcr-numbers`).
 
+## Nightly email (images + GroupMe text)
+
+`tools/send-report.mjs` pulls the day's numbers from the site, renders the phone-friendly images, and emails
+**both** the images and the exact GroupMe-format text via Resend. It runs in GitHub Actions
+(`.github/workflows/nightly-report.yml`), not on Cloudflare: rendering PNGs needs more CPU than Cloudflare's free
+plan allows, and Actions is free.
+
+One-time setup, in the GitHub repo -> Settings -> Secrets and variables -> Actions:
+
+| Kind | Name | Value |
+|---|---|---|
+| Secret | `ADMIN_PASSWORD` | the same dashboard password set in Cloudflare |
+| Secret | `RESEND_API_KEY` | Resend API key (needs a verified sending domain) |
+| Variable | `SITE_URL` | your Pages URL, e.g. `https://bcr-numbers.pages.dev` |
+| Variable | `REPORT_FROM` | e.g. `Best Choice Numbers <numbers@yourdomain.com>` (must be on the verified domain) |
+| Variable | `REPORT_TO` | comma-separated recipient list |
+| Variable (optional) | `SEND_HOUR` | local hour to send, 0-23 (default `22` = 10pm) |
+| Variable (optional) | `TZ_NAME` | default `America/New_York` |
+
+The workflow must be on the repository's **default branch** for the schedule and the "Run workflow" button to work.
+Test it any time: Actions -> *Nightly numbers email* -> Run workflow (fill `test_to` to send only to yourself,
+or tick `dry_run` to render without sending). Scheduled runs skip themselves if nobody has submitted yet; GitHub can
+start scheduled runs a few minutes late, and a run delayed past the send hour is skipped (re-run it by hand).
+
+Preview the images locally: `npm ci --prefix tools && node tools/preview.mjs sample/2026-10-05.json out --mobile`.
+
 ## Local development
 
     echo "ADMIN_PASSWORD=pw" > .dev.vars          # gitignored
     npx wrangler pages dev public --d1 DB
     # first run only: apply schema.sql to the local DB file under .wrangler/state/v3/d1/
-    npm test                                       # calculation + data-layer tests
+    npm ci --prefix tools && npm test              # calculation, data-layer, text-format and email tests
 
 ## How the math works (matches the spreadsheet)
 

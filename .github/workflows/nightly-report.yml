@@ -1,0 +1,47 @@
+name: Nightly numbers email
+
+on:
+  schedule:
+    # Two UTC times so it lands at the local send hour in both daylight and standard time;
+    # the script only sends when the local hour (TZ_NAME) equals SEND_HOUR. :07 avoids the top-of-hour rush.
+    - cron: '7 2,3 * * *'
+  workflow_dispatch:
+    inputs:
+      date:
+        description: 'Report date (YYYY-MM-DD). Blank = today.'
+        required: false
+      test_to:
+        description: 'Send only to this email (a test). Blank = the full list.'
+        required: false
+      dry_run:
+        description: 'Render only, do not send'
+        type: boolean
+        default: false
+
+concurrency: nightly-report
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --prefix tools
+      - name: Send report
+        env:
+          SITE_URL: ${{ vars.SITE_URL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          REPORT_FROM: ${{ vars.REPORT_FROM }}
+          REPORT_TO: ${{ vars.REPORT_TO }}
+          TZ_NAME: ${{ vars.TZ_NAME || 'America/New_York' }}
+          # Scheduled runs only fire at the send hour; manual runs go immediately.
+          GATE_HOUR: ${{ github.event_name == 'schedule' && (vars.SEND_HOUR || '22') || '' }}
+          REPORT_DATE: ${{ inputs.date }}
+          TEST_TO: ${{ inputs.test_to }}
+          DRY_RUN: ${{ inputs.dry_run && '1' || '' }}
+          FORCE: ${{ github.event_name == 'workflow_dispatch' && '1' || '' }}
+        run: node tools/send-report.mjs

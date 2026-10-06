@@ -93,3 +93,11 @@ test('real 10/05/26 GroupMe post: carry-in + that day reproduces the pasted Dail
   assert.equal(Math.round(r.trackingMonth.revenue), sample.tracking);
   assert.equal(r.missing.length, 0);
 });
+
+test('GroupMe text matches the format accounting pastes today, character for character', async () => {
+  const { readFileSync } = await import('node:fs');
+  const { groupmeText } = await import('../functions/_lib/report-text.js');
+  const sample = JSON.parse(readFileSync(new URL('../sample/2026-10-05.json', import.meta.url), 'utf8'));
+  const expected = readFileSync(new URL('../sample/2026-10-05.groupme.txt', import.meta.url), 'utf8');
+  assert.equal(groupmeText(sample), expected);
+});

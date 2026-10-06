@@ -152,8 +152,9 @@ export function reportSvg(d, { logoDataUri } = {}) {
   out += `<rect x="${W / 2 - 70}" y="134" width="140" height="6" rx="3" fill="${COLORS.red}"/>`;
   out += text(W / 2, 176, 'DAILY NUMBERS REPORT', { size: 24, weight: 600, fill: COLORS.mute, anchor: 'middle', spacing: 6 });
   // right side of the header balances the logo
-  out += text(W - M - 10, 88, String(d.branches.length), { size: 80, weight: 700, anchor: 'end' });
-  out += text(W - M - 10, 124, 'BRANCHES REPORTING', { size: 20, weight: 600, fill: COLORS.mute, anchor: 'end', spacing: 3 });
+  const reported = d.reported ?? d.branches.length;
+  out += text(W - M - 10, 88, String(reported), { size: 80, weight: 700, anchor: 'end' });
+  out += text(W - M - 10, 124, reported < d.branches.length ? `OF ${d.branches.length} BRANCHES REPORTING` : 'BRANCHES REPORTING', { size: 20, weight: 600, fill: COLORS.mute, anchor: 'end', spacing: 3 });
 
   out += branchColumn(leftX, bodyY, left, half);
   out += branchColumn(rightX, bodyY, right, half);
