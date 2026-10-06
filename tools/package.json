@@ -1,0 +1,10 @@
+{
+  "name": "bcr-numbers-tools",
+  "private": true,
+  "type": "module",
+  "description": "Local-only tooling (image preview). Not used by the Cloudflare deploy.",
+  "dependencies": {
+    "@expo-google-fonts/barlow-condensed": "^0.2.3",
+    "@resvg/resvg-js": "^2.6.2"
+  }
+}
