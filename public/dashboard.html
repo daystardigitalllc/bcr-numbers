@@ -1,147 +1,274 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Numbers Dashboard</title><link rel="stylesheet" href="/style.css"></head>
-<body><div class="wrap wide">
-<div id="login" class="card" style="max-width:380px">
-  <h1>Accounting login</h1><label for="pw">Password</label><input id="pw" type="password">
-  <p><button id="loginBtn">Sign in</button></p><div id="loginMsg"></div>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f141c">
+<title>Numbers Dashboard · Best Choice Roofing</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f141c'/%3E%3Cpath d='M8 36 32 14l24 22h-9L32 22 17 36z' fill='%23e32727'/%3E%3Crect x='28' y='38' width='8' height='8' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/style.css"></head>
+<body>
+
+<div id="login" class="login">
+  <div class="card">
+    <img src="/logo.png" alt="Best Choice Roofing" style="background:var(--navy);border-radius:12px;padding:10px;height:110px">
+    <h1 style="font-size:1.25rem;margin:14px 0 4px">Accounting dashboard</h1>
+    <p class="mute small" style="margin:0 0 16px">Enter the accounting password to continue.</p>
+    <form id="loginForm"><label for="pw" class="mute small" style="text-align:left">Password</label>
+      <input id="pw" type="password" autocomplete="current-password" autocapitalize="off" autofocus>
+      <div id="loginMsg" role="alert"></div>
+      <button style="width:100%;margin-top:14px;min-height:50px" type="submit">Sign in</button></form>
+  </div>
 </div>
+
 <div id="app" hidden>
-  <div class="tabs"><button class="on" data-tab="report">Daily report</button><button data-tab="setup">Setup</button></div>
+<header class="topbar"><div class="topbar-in">
+  <img src="/logo.png" alt="Best Choice Roofing"><span class="title">Numbers dashboard</span><span class="spacer"></span>
+  <nav class="nav" id="nav" aria-label="Sections">
+    <button class="on" data-tab="report">Daily report</button><button data-tab="setup">Setup</button>
+  </nav>
+  <button class="ghost sm" id="signout">Sign out</button>
+</div></header>
 
-  <section id="report">
-    <div class="card row">
-      <div><label for="rdate">Date</label><input id="rdate" type="date"></div>
-      <button class="ghost" id="prev">◀ Prev</button><button class="ghost" id="next">Next ▶</button>
-      <button class="ghost" id="copy">Copy GroupMe recap</button>
-      <span id="count" class="mute"></span>
+<main class="page">
+<section id="report" class="stack">
+  <div class="card">
+    <div class="datebar">
+      <button class="ghost icon" id="prev" aria-label="Previous day">‹</button>
+      <div class="datepick"><div class="label" id="dateLabel">…</div><input type="date" id="rdate" aria-label="Choose date"></div>
+      <button class="ghost icon" id="next" aria-label="Next day">›</button>
+      <button class="ghost" id="todayBtn">Today</button>
     </div>
-    <div id="note" class="msg" hidden style="background:var(--warn)"></div>
-    <div class="card" id="missingCard"><h1 id="missingTitle" style="font-size:1.05rem"></h1><div class="chips" id="missingChips"></div></div>
-    <div class="card"><div class="stats" id="stats"></div><p class="mute" style="margin:12px 0 0;font-size:.85rem"><b>Tracking</b> = if the rest of the month goes like the days so far: <b>Daily</b> = month-to-date ÷ days worked; <b>For Month</b> = Daily × total workable days. It only holds steady or climbs when new numbers come in.</p></div>
-    <div class="card scroll"><table id="tbl"></table></div>
-    <div class="card" id="editor" hidden>
-      <h1 id="editTitle"></h1>
-      <div class="grid" id="editGrid"></div>
-      <p><button id="saveEdit">Save</button> <button class="ghost" id="cancelEdit">Cancel</button></p><div id="editMsg"></div>
-    </div>
-  </section>
+    <div class="progress-row"><b id="progText">…</b><span class="mute small" id="progSub"></span></div>
+    <div class="progress"><i id="progBar" style="width:0"></i></div>
+  </div>
 
-  <section id="setup" hidden>
-    <div class="card"><h1>Month-to-date carry-in</h1>
-      <p class="mute">Starting MTD for a month (e.g. the final MTD from the old spreadsheet). Submissions dated after “through” are added on top automatically.</p>
-      <div class="scroll"><table id="baseTbl"></table></div>
-      <h1 style="margin-top:16px;font-size:1rem">Add / replace</h1>
-      <div class="grid" id="baseGrid"></div><p><button id="saveBase">Save carry-in</button></p><div id="baseMsg"></div></div>
-    <div class="card"><h1>Holidays (non-workable days)</h1>
-      <p class="mute">Sundays are always off. Add company holidays that fall Mon–Sat so days worked / total days stay right.</p>
-      <div class="row"><div><label>Date</label><input id="hDate" type="date"></div><div><label>Name</label><input id="hName"></div><button id="addHol">Add</button></div>
-      <table id="holTbl"></table></div>
-    <div class="card"><h1>Branches</h1>
-      <div class="row"><div><label>New branch</label><input id="bName"></div><button id="addBranch">Add</button></div>
-      <table id="brTbl"></table></div>
-  </section>
-</div></div>
+  <div id="note" class="banner" hidden></div>
+
+  <div class="card" id="missingCard" hidden>
+    <h2 id="missingTitle"></h2>
+    <div class="chips" id="missingChips"></div>
+  </div>
+
+  <div class="seg mobile-only" id="sumSeg" role="tablist">
+    <button class="on" data-s="today">Today</button><button data-s="mtd">Month</button><button data-s="track">Tracking</button>
+  </div>
+  <div class="summaries" id="summaries"></div>
+  <p class="explain"><b>Tracking</b> asks: <i>if the rest of the month goes like the days so far, where do we finish?</i> Daily = month-to-date ÷ days worked. For month = daily × total workable days.</p>
+
+  <div class="card listcard" style="padding:14px">
+    <div class="toolbar">
+      <input class="search" id="q" type="search" placeholder="Search branches" aria-label="Search branches">
+      <div class="seg" id="filter" style="min-width:250px"><button class="on" data-f="all">All</button><button data-f="missing">Missing</button><button data-f="in">Submitted</button></div>
+      <button class="ghost" id="copy">Copy GroupMe post</button>
+    </div>
+    <div class="tscroll"><table class="btable" id="tbl"></table></div>
+  </div>
+</section>
+
+<section id="setup" class="stack" hidden>
+  <div class="card"><h2>Month-to-date carry-in</h2>
+    <p class="mute small" style="margin:4px 0 10px">Starting totals for a month (for example the last MTD from the old spreadsheet). Submissions dated after the "through" date are added on top automatically.</p>
+    <div id="baseList"></div>
+    <h2 style="margin-top:18px;font-size:.95rem">Add or replace a carry-in</h2>
+    <div class="grid2" style="margin-top:10px" id="baseGrid"></div>
+    <p><button id="saveBase">Save carry-in</button></p>
+  </div>
+  <div class="card"><h2>Holidays</h2>
+    <p class="mute small" style="margin:4px 0 10px">Sundays are always off. Add company holidays that fall Monday–Saturday so "days worked" and "total days" stay right.</p>
+    <div class="grid2"><div><label for="hDate">Date</label><input id="hDate" type="date"></div><div><label for="hName">Name</label><input id="hName" placeholder="Thanksgiving"></div></div>
+    <p><button id="addHol">Add holiday</button></p><div id="holList"></div>
+  </div>
+  <div class="card"><h2>Branches</h2>
+    <div class="grid2" style="margin-top:10px;align-items:end"><div><label for="bName">New branch</label><input id="bName" placeholder="Branch name"></div><div><button id="addBranch" style="width:100%">Add branch</button></div></div>
+    <div id="brList" style="margin-top:8px"></div>
+  </div>
+</section>
+</main>
+</div>
+
+<dialog id="editDlg"><form method="dialog" id="editForm">
+  <h2 id="editTitle"></h2><p class="mute small" id="editSub" style="margin:2px 0 14px"></p>
+  <div class="grid2" id="editGrid"></div>
+  <div id="editMsg" role="alert"></div>
+  <div class="actions"><button type="button" class="ghost" id="cancelEdit">Cancel</button><button type="submit" id="saveEdit">Save</button></div>
+</form></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
 <script>
 const $ = (id) => document.getElementById(id);
 const M = [['knock','Knock'],['talk','Talk'],['walk','Walk'],['contingency','Contingency'],['approved','Approved'],['contracts','Contracts'],['revenue','Revenue'],['soft_sets','Soft Sets']];
 let pw = ''; try { pw = sessionStorage.getItem('pw') || ''; } catch {}
-let rep = null, editing = null;
+let rep = null, editing = null, filter = 'all', sumView = 'today';
 
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const money = (v, cents) => v == null ? '—' : v.toLocaleString('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: cents ? 2 : 0, maximumFractionDigits: cents ? 2 : 0 });
+const n = (v) => v == null ? '—' : Math.round(v).toLocaleString('en-US');
+const fmt = (k, v, cents) => k === 'revenue' ? money(v, cents) : n(v);
 const byName = (a, b) => a.branch.localeCompare(b.branch, 'en', { sensitivity: 'base' });
-const fmt = (k, v) => v == null ? '—' : k === 'revenue' ? v.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : v.toLocaleString('en-US', { maximumFractionDigits: 2 });
-const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dparts = (iso) => new Date(iso + 'T00:00:00Z');
+const weekday = (iso) => dparts(iso).toLocaleDateString('en-US', { weekday: 'long', timeZone: 'UTC' });
+const shortDate = (iso) => dparts(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' });
+
+let toastTimer;
+function toast(t, bad) { const el = $('toast'); el.textContent = t; el.className = 'show' + (bad ? ' bad' : ''); clearTimeout(toastTimer); toastTimer = setTimeout(() => el.className = '', 2600); }
+
 async function call(method, url, body) {
   const r = await fetch(url, { method, headers: { 'content-type': 'application/json', 'x-admin-password': pw }, body: body ? JSON.stringify(body) : undefined });
-  const d = await r.json();
-  if (!r.ok) { if (r.status === 401) showLogin(); throw new Error(d.error); }
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { if (r.status === 401) showLogin(); throw new Error(d.error || 'Something went wrong'); }
   return d;
 }
-const flash = (el, t, ok) => { el.className = 'msg ' + (ok ? 'ok' : 'err'); el.textContent = t; };
 function showLogin() { $('app').hidden = true; $('login').hidden = false; }
 
-async function login() {
+async function login(e) {
+  if (e) e.preventDefault();
   pw = $('pw').value || pw;
-  try { await call('POST', '/api/admin/check'); try { sessionStorage.setItem('pw', pw); } catch {}
-    $('login').hidden = true; $('app').hidden = false; $('rdate').value = (await (await fetch('/api/config')).json()).today; load(); loadSetup();
-  } catch (e) { flash($('loginMsg'), e.message, false); }
+  try {
+    await call('POST', '/api/admin/check'); try { sessionStorage.setItem('pw', pw); } catch {}
+    $('login').hidden = true; $('app').hidden = false; $('loginMsg').textContent = ''; $('loginMsg').className = '';
+    if (!$('rdate').value) $('rdate').value = (await (await fetch('/api/config')).json()).today;
+    load(); loadSetup();
+  } catch (err) { $('loginMsg').className = 'msg err'; $('loginMsg').textContent = err.message; }
 }
-$('loginBtn').onclick = login; $('pw').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
+$('loginForm').addEventListener('submit', login);
 if (pw) login();
+$('signout').onclick = () => { try { sessionStorage.removeItem('pw'); } catch {} pw = ''; $('pw').value = ''; showLogin(); };
 
-document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+// ---- tabs
+$('nav').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  $('nav').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
   $('report').hidden = b.dataset.tab !== 'report'; $('setup').hidden = b.dataset.tab !== 'setup';
+  window.scrollTo({ top: 0 });
 });
 
-async function load() {
-  rep = await call('GET', '/api/admin/report?date=' + $('rdate').value);
-  $('count').textContent = `${rep.submittedCount} of ${rep.rows.length} branches reported`;
-  const alpha = [...rep.rows].sort(byName);
-  const miss = alpha.filter(r => !r.submitted && r.active);
-  $('missingTitle').textContent = miss.length ? `Not yet submitted (${miss.length})` : `All ${rep.rows.length} branches have submitted ✓`;
-  $('missingChips').innerHTML = miss.map(r => `<span class="chip">${esc(r.branch)}<button class="ghost small" data-id="${r.branchId}">Enter</button></span>`).join('');
-  $('missingChips').querySelectorAll('button[data-id]').forEach(b => b.onclick = () => edit(Number(b.dataset.id)));
-  $('note').hidden = !rep.note; $('note').textContent = rep.note || '';
-  $('stats').innerHTML = [
-    ['Revenue today', fmt('revenue', rep.dayTotal.revenue)],
-    ['Revenue MTD', fmt('revenue', rep.newMtd.revenue)],
-    ['Days worked / total', `${rep.daysWorked} / ${rep.totalDays}`],
-    ['Tracking daily (revenue)', fmt('revenue', rep.trackingDaily.revenue)],
-    ['Tracking for month (revenue)', fmt('revenue', rep.trackingMonth.revenue)],
-  ].map(([a, b]) => `<div class="stat"><span class="mute">${a}</span><b>${b}</b></div>`).join('');
-  const sumRow = (cls, label, o) => `<tr class="${cls}"><td>${label}</td>${M.map(([k]) => `<td>${fmt(k, o[k])}</td>`).join('')}<td></td></tr>`;
-  $('tbl').innerHTML = `<tr><th>Branch</th>${M.map(([, l]) => `<th>${l}</th>`).join('')}<th></th></tr>` +
-    alpha.map(r => `<tr class="${r.submitted ? '' : 'missing'}"><td>${esc(r.branch)}</td>${M.map(([k]) => `<td>${fmt(k, r[k])}</td>`).join('')}<td><button class="ghost small" data-id="${r.branchId}">${r.submitted ? 'Edit' : 'Enter'}</button>${r.submitted ? ` <button class="danger small" data-del="${r.branchId}">Delete</button>` : ''}</td></tr>`).join('') +
-    sumRow('total', 'Daily Total', rep.dayTotal) + sumRow('sum', 'Old MTD', rep.oldMtd) + sumRow('sum', 'New MTD', rep.newMtd) +
-    sumRow('sum', `Tracking Daily (÷ ${rep.daysWorked} days)`, rep.trackingDaily) + sumRow('sum', `Tracking For Month (× ${rep.totalDays} days)`, rep.trackingMonth);
-  $('tbl').querySelectorAll('button[data-id]').forEach(b => b.onclick = () => edit(Number(b.dataset.id)));
-  $('tbl').querySelectorAll('button[data-del]').forEach(b => b.onclick = async () => {
-    const r = rep.rows.find(x => x.branchId === Number(b.dataset.del));
-    if (!confirm(`Delete ${r.branch}'s numbers for ${rep.date}?\n\nThey'll show as not submitted and can submit again from the form.`)) return;
-    try { await call('DELETE', `/api/admin/submissions/${rep.date}/${r.branchId}`); load(); } catch (e) { alert(e.message); }
-  });
-}
-$('rdate').onchange = load;
-const shift = (n) => { const d = new Date($('rdate').value + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); $('rdate').value = d.toISOString().slice(0, 10); load(); };
+// ---- date bar
+function setDate(iso) { $('rdate').value = iso; load(); }
+const shift = (d) => { const t = dparts($('rdate').value); t.setUTCDate(t.getUTCDate() + d); setDate(t.toISOString().slice(0, 10)); };
 $('prev').onclick = () => shift(-1); $('next').onclick = () => shift(1);
+$('rdate').addEventListener('change', () => $('rdate').value && load());
+$('todayBtn').onclick = async () => setDate((await (await fetch('/api/config')).json()).today);
+
+// ---- summary cards
+const sumSeg = $('sumSeg');
+sumSeg.addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; sumView = b.dataset.s; renderSummaries(); });
+
+function tiles(o, sub) {
+  return '<div class="tiles">' + M.filter(([k]) => k !== 'revenue').map(([k, l]) =>
+    '<div class="tile"><span>' + l + '</span><b class="num">' + n(o[k]) + '</b>' + (sub ? '<em>' + n(sub[k]) + '/day</em>' : '') + '</div>').join('') + '</div>';
+}
+function renderSummaries() {
+  if (!rep) return;
+  sumSeg.querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.s === sumView));
+  const cards = {
+    today: '<h2>Today</h2><div class="big num">' + money(rep.dayTotal.revenue) + '</div><div class="sub">Revenue · ' + rep.submittedCount + ' of ' + rep.rows.length + ' branches reported</div>' + tiles(rep.dayTotal),
+    mtd: '<h2>Month to date</h2><div class="big num">' + money(rep.newMtd.revenue) + '</div><div class="sub">Old MTD ' + money(rep.oldMtd.revenue) + ' + today ' + money(rep.dayTotal.revenue) + '</div>' + tiles(rep.newMtd),
+    track: '<h2>Tracking</h2><div class="big good num">' + money(rep.trackingMonth.revenue) + '</div><div class="sub">Projected month revenue · ' + money(rep.trackingDaily.revenue) + '/day · ' + rep.daysWorked + ' of ' + rep.totalDays + ' workdays</div>' + tiles(rep.trackingMonth, rep.trackingDaily),
+  };
+  $('summaries').innerHTML = Object.entries(cards).map(([k, h]) => '<div class="card sum' + (k === sumView ? ' on' : '') + '">' + h + '</div>').join('');
+}
+
+// ---- load + render
+async function load() {
+  try { rep = await call('GET', '/api/admin/report?date=' + $('rdate').value); } catch (e) { toast(e.message, true); return; }
+  const d = rep.date;
+  $('dateLabel').innerHTML = esc(shortDate(d)) + '<small>' + esc(d.slice(0, 4)) + '</small>';
+  const total = rep.rows.filter((r) => r.active || r.submitted).length;
+  $('progText').textContent = rep.submittedCount + ' of ' + total + ' submitted';
+  $('progSub').textContent = rep.missing.length ? rep.missing.length + ' to go' : 'All in ✓';
+  $('progBar').style.width = total ? Math.round(100 * rep.submittedCount / total) + '%' : '0';
+  $('note').hidden = !rep.note; $('note').textContent = rep.note || '';
+  const alpha = [...rep.rows].sort(byName);
+  const miss = alpha.filter((r) => !r.submitted && r.active);
+  $('missingCard').hidden = !miss.length;
+  $('missingTitle').textContent = 'Not yet submitted (' + miss.length + ')';
+  $('missingChips').innerHTML = miss.map((r) => '<span class="chip">' + esc(r.branch.trim()) + '<button data-id="' + r.branchId + '">Enter</button></span>').join('');
+  renderSummaries(); renderBranches();
+}
+
+function renderBranches() {
+  if (!rep) return;
+  const q = $('q').value.trim().toLowerCase();
+  const rows = [...rep.rows].sort(byName).filter((r) => (filter === 'all' || (filter === 'missing' ? !r.submitted : r.submitted)) && r.branch.toLowerCase().includes(q));
+  const head = '<thead><tr><th>Branch</th><th>Status</th>' + M.map(([, l]) => '<th>' + l + '</th>').join('') + '<th></th></tr></thead>';
+  const body = rows.map((r) => {
+    const nums = M.map(([k, l]) => {
+      const v = r[k];
+      const cls = [r.submitted ? '' : 'nd', k === 'revenue' ? 'rev num' : 'num', r.submitted && !v ? 'zero' : '', k === 'revenue' && v > 0 ? 'hit' : ''].filter(Boolean).join(' ');
+      return '<td class="' + cls + '" data-l="' + l + '">' + fmt(k, v, true) + '</td>';
+    }).join('');
+    const acts = r.submitted
+      ? '<div class="acts"><button class="ghost sm" data-id="' + r.branchId + '">Edit</button><button class="danger sm" data-del="' + r.branchId + '">Delete</button></div>'
+      : '<div class="acts"><button class="sm" data-id="' + r.branchId + '">Enter numbers</button></div>';
+    return '<tr class="' + (r.submitted ? '' : 'missing') + '"><td class="name">' + esc(r.branch.trim()) + '</td><td class="st"><span class="pill ' + (r.submitted ? 'in' : 'out') + '">' + (r.submitted ? 'Submitted' : 'Missing') + '</span></td>' + nums + '<td class="act">' + acts + '</td></tr>';
+  }).join('');
+  $('tbl').innerHTML = rows.length ? head + '<tbody>' + body + '</tbody>' : '<tbody><tr><td class="empty" colspan="11">No branches match.</td></tr></tbody>';
+}
+$('q').addEventListener('input', renderBranches);
+$('filter').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; filter = b.dataset.f; $('filter').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b)); renderBranches(); });
+
+// one click handler for Edit / Enter / Delete, wherever the buttons are
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('button[data-id],button[data-del]'); if (!b || !rep) return;
+  if (b.dataset.id) return edit(Number(b.dataset.id));
+  const r = rep.rows.find((x) => x.branchId === Number(b.dataset.del));
+  if (!confirm('Delete ' + r.branch.trim() + "'s numbers for " + rep.date + "?\n\nThey'll show as not submitted and can submit again from the form.")) return;
+  try { await call('DELETE', '/api/admin/submissions/' + rep.date + '/' + r.branchId); toast('Deleted — ' + r.branch.trim() + ' can resubmit'); load(); } catch (err) { toast(err.message, true); }
+});
 
 $('copy').onclick = async () => {
-  const money = (v) => '$' + (v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-  const txt = rep.rows.filter(r => r.submitted).map(r => `${r.branch}: ${r.contingency}-${r.approved}-${r.contracts}-${money(r.revenue)}-${r.soft_sets}`).join('\n');
-  try { await navigator.clipboard.writeText(txt); $('count').textContent = 'Recap copied'; } catch { prompt('Copy:', txt); }
+  try {
+    const { text } = await call('GET', '/api/admin/groupme?date=' + $('rdate').value);
+    try { await navigator.clipboard.writeText(text); toast('GroupMe post copied'); } catch { prompt('Copy this:', text); }
+  } catch (e) { toast(e.message, true); }
 };
 
+// ---- edit dialog
 function edit(id) {
-  const r = rep.rows.find(x => x.branchId === id); editing = id;
-  $('editTitle').textContent = `${r.branch} — ${rep.date}`;
-  $('editGrid').innerHTML = M.map(([k, l]) => `<div><label>${l}</label><input data-k="${k}" inputmode="decimal" value="${r[k] ?? ''}"></div>`).join('');
-  $('editor').hidden = false; $('editMsg').textContent = ''; $('editor').scrollIntoView();
+  const r = rep.rows.find((x) => x.branchId === id); editing = id;
+  $('editTitle').textContent = r.branch.trim();
+  $('editSub').textContent = shortDate(rep.date) + ', ' + rep.date.slice(0, 4) + (r.submitted ? ' · editing submitted numbers' : ' · entering numbers for this branch');
+  $('editGrid').innerHTML = M.map(([k, l]) => '<div><label for="e_' + k + '">' + l + '</label><input id="e_' + k + '" data-k="' + k + '" inputmode="decimal" placeholder="0" value="' + (r[k] ?? '') + '"></div>').join('');
+  $('editMsg').textContent = ''; $('editMsg').className = '';
+  $('editDlg').showModal();
 }
-$('cancelEdit').onclick = () => $('editor').hidden = true;
-$('saveEdit').onclick = async () => {
+$('cancelEdit').onclick = () => $('editDlg').close();
+$('editForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
   const body = { branchId: editing, date: rep.date };
-  $('editGrid').querySelectorAll('input').forEach(i => body[i.dataset.k] = i.value);
-  try { await call('POST', '/api/admin/submit', body); $('editor').hidden = true; load(); } catch (e) { flash($('editMsg'), e.message, false); }
-};
+  $('editGrid').querySelectorAll('input').forEach((i) => body[i.dataset.k] = i.value);
+  $('saveEdit').disabled = true;
+  try { await call('POST', '/api/admin/submit', body); $('editDlg').close(); toast('Saved'); load(); }
+  catch (err) { $('editMsg').className = 'msg err'; $('editMsg').textContent = err.message; }
+  $('saveEdit').disabled = false;
+});
 
+// ---- setup
+const item = (title, meta, btn) => '<div class="rowitem"><div class="grow"><b>' + title + '</b><div class="meta">' + meta + '</div></div>' + btn + '</div>';
 async function loadSetup() {
   const s = await call('GET', '/api/admin/setup');
-  $('baseTbl').innerHTML = `<tr><th>Month</th><th>Through</th>${M.map(([, l]) => `<th>${l}</th>`).join('')}<th></th></tr>` +
-    s.baselines.map(b => `<tr><td>${b.month}</td><td>${b.through_date}</td>${M.map(([k]) => `<td>${fmt(k, b[k])}</td>`).join('')}<td><button class="ghost small" data-del="${b.month}">Remove</button></td></tr>`).join('');
-  $('baseTbl').querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { if (confirm('Remove this carry-in?')) { await call('DELETE', '/api/admin/baselines/' + b.dataset.del); loadSetup(); load(); } });
-  $('holTbl').innerHTML = s.holidays.map(h => `<tr><td>${h.date}</td><td>${esc(h.name)}</td><td><button class="ghost small" data-hd="${h.date}">Remove</button></td></tr>`).join('') || '<tr><td class="mute">None yet</td></tr>';
-  $('holTbl').querySelectorAll('[data-hd]').forEach(b => b.onclick = async () => { await call('DELETE', '/api/admin/holidays/' + b.dataset.hd); loadSetup(); load(); });
-  $('brTbl').innerHTML = s.branches.map(b => `<tr><td>${esc(b.name)}</td><td>${b.active ? '' : '<span class="mute">inactive</span>'}</td><td><button class="ghost small" data-br="${b.id}" data-on="${b.active ? 0 : 1}">${b.active ? 'Deactivate' : 'Reactivate'}</button></td></tr>`).join('');
-  $('brTbl').querySelectorAll('[data-br]').forEach(b => b.onclick = async () => { await call('PATCH', '/api/admin/branches/' + b.dataset.br, { active: b.dataset.on === '1' }); loadSetup(); load(); });
+  $('baseList').innerHTML = s.baselines.map((b) => item(esc(b.month) + ' <span class="mute small">through ' + esc(b.through_date) + '</span>',
+    M.map(([k, l]) => l + ' ' + fmt(k, b[k], true)).join(' · '), '<button class="danger sm" data-bdel="' + esc(b.month) + '">Remove</button>')).join('') || '<p class="mute">None yet.</p>';
+  $('holList').innerHTML = s.holidays.map((h) => item(esc(h.date), esc(h.name) || '—', '<button class="danger sm" data-hdel="' + esc(h.date) + '">Remove</button>')).join('') || '<p class="mute small" style="margin:10px 0 0">No holidays added yet.</p>';
+  $('brList').innerHTML = s.branches.map((b) => item(esc(b.name.trim()), b.active ? 'Active' : 'Inactive — hidden from the form',
+    '<button class="ghost sm" data-bact="' + b.id + '" data-on="' + (b.active ? 0 : 1) + '">' + (b.active ? 'Deactivate' : 'Reactivate') + '</button>')).join('');
 }
-$('baseGrid').innerHTML = '<div><label>Month (YYYY-MM)</label><input id="bMonth" placeholder="2026-11"></div><div><label>Through date</label><input id="bThru" type="date"></div>' +
-  M.map(([k, l]) => `<div><label>${l} MTD</label><input data-bk="${k}" inputmode="decimal"></div>`).join('');
+$('setup').addEventListener('click', async (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  try {
+    if (b.dataset.bdel) { if (!confirm('Remove this carry-in?')) return; await call('DELETE', '/api/admin/baselines/' + b.dataset.bdel); }
+    else if (b.dataset.hdel) await call('DELETE', '/api/admin/holidays/' + b.dataset.hdel);
+    else if (b.dataset.bact) await call('PATCH', '/api/admin/branches/' + b.dataset.bact, { active: b.dataset.on === '1' });
+    else return;
+    toast('Done'); loadSetup(); load();
+  } catch (err) { toast(err.message, true); }
+});
+$('baseGrid').innerHTML = '<div><label for="bMonth">Month</label><input id="bMonth" placeholder="2026-11"></div><div><label for="bThru">Through date</label><input id="bThru" type="date"></div>' +
+  M.map(([k, l]) => '<div><label for="b_' + k + '">' + l + ' MTD</label><input id="b_' + k + '" data-bk="' + k + '" inputmode="decimal"></div>').join('');
 $('saveBase').onclick = async () => {
-  const body = { month: $('bMonth').value, through_date: $('bThru').value };
-  $('baseGrid').querySelectorAll('[data-bk]').forEach(i => body[i.dataset.bk] = i.value);
-  try { await call('POST', '/api/admin/baselines', body); flash($('baseMsg'), 'Saved', true); loadSetup(); load(); } catch (e) { flash($('baseMsg'), e.message, false); }
+  const body = { month: $('bMonth').value.trim(), through_date: $('bThru').value };
+  $('baseGrid').querySelectorAll('[data-bk]').forEach((i) => body[i.dataset.bk] = i.value);
+  try { await call('POST', '/api/admin/baselines', body); toast('Carry-in saved'); loadSetup(); load(); } catch (e) { toast(e.message, true); }
 };
-$('addHol').onclick = async () => { try { await call('POST', '/api/admin/holidays', { date: $('hDate').value, name: $('hName').value }); $('hName').value = ''; loadSetup(); load(); } catch (e) { alert(e.message); } };
-$('addBranch').onclick = async () => { try { await call('POST', '/api/admin/branches', { name: $('bName').value }); $('bName').value = ''; loadSetup(); } catch (e) { alert(e.message); } };
+$('addHol').onclick = async () => { try { await call('POST', '/api/admin/holidays', { date: $('hDate').value, name: $('hName').value }); $('hName').value = ''; toast('Holiday added'); loadSetup(); load(); } catch (e) { toast(e.message, true); } };
+$('addBranch').onclick = async () => { try { await call('POST', '/api/admin/branches', { name: $('bName').value }); $('bName').value = ''; toast('Branch added'); loadSetup(); load(); } catch (e) { toast(e.message, true); } };
 </script></body></html>

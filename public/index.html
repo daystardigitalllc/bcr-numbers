@@ -1,56 +1,110 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Nightly Numbers</title><link rel="stylesheet" href="/style.css"></head>
-<body><div class="wrap">
-<div class="card">
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0f141c">
+<title>Nightly Numbers · Best Choice Roofing</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230f141c'/%3E%3Cpath d='M8 36 32 14l24 22h-9L32 22 17 36z' fill='%23e32727'/%3E%3Crect x='28' y='38' width='8' height='8' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="/style.css"></head>
+<body>
+<header class="hero">
+  <img src="/logo.png" alt="Best Choice Roofing">
   <h1>Nightly Numbers</h1>
-  <div class="mute">Enter your branch's combined totals for the day.</div>
-  <form id="f" autocomplete="off">
-    <label for="branch">Branch</label><select id="branch" required></select>
-    <label>Date</label><div id="dateBox" class="datebox">…</div>
-    <div id="codeRow" hidden><label for="code">Access code</label><input id="code" type="password"></div>
-    <div class="grid">
-      <div><label for="knock">Knock</label><input id="knock" inputmode="numeric" placeholder="0"></div>
-      <div><label for="talk">Talk</label><input id="talk" inputmode="numeric" placeholder="0"></div>
-      <div><label for="walk">Walk</label><input id="walk" inputmode="numeric" placeholder="0"></div>
-      <div><label for="contingency">Contingency</label><input id="contingency" inputmode="numeric" placeholder="0"></div>
-      <div><label for="approved">Approved</label><input id="approved" inputmode="numeric" placeholder="0"></div>
-      <div><label for="contracts">Contracts</label><input id="contracts" inputmode="numeric" placeholder="0"></div>
-      <div><label for="revenue">Revenue ($)</label><input id="revenue" inputmode="decimal" placeholder="0.00"></div>
-      <div><label for="soft_sets">Soft Sets</label><input id="soft_sets" inputmode="numeric" placeholder="0"></div>
-    </div>
-    <p class="mute" style="margin-bottom:0">Each branch can submit once per day. If you make a mistake, contact accounting to have it corrected.</p>
-    <p><button type="submit" id="go">Submit numbers</button></p>
-  </form>
-  <div id="msg" role="status"></div>
-</div></div>
+  <p>Enter your branch's combined totals for today</p>
+</header>
+
+<main class="page narrow" style="padding-top:0">
+  <div class="card formcard" id="formCard">
+    <form id="f" autocomplete="off" novalidate>
+      <div class="field">
+        <label for="branch">Branch</label>
+        <select id="branch" required><option value="">Loading…</option></select>
+      </div>
+      <div class="field">
+        <label>Date <span class="mute small" style="font-weight:500">(set automatically)</span></label>
+        <div class="datebox">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>
+          <span id="dateBox">…</span>
+        </div>
+      </div>
+      <div class="field" id="codeRow" hidden>
+        <label for="code">Access code</label>
+        <input id="code" type="password" autocomplete="off" enterkeyhint="next">
+      </div>
+      <div class="metrics">
+        <div><label for="knock">Knock</label><input id="knock" inputmode="numeric" pattern="[0-9]*" placeholder="0" enterkeyhint="next"></div>
+        <div><label for="talk">Talk</label><input id="talk" inputmode="numeric" pattern="[0-9]*" placeholder="0" enterkeyhint="next"></div>
+        <div><label for="walk">Walk</label><input id="walk" inputmode="numeric" pattern="[0-9]*" placeholder="0" enterkeyhint="next"></div>
+        <div><label for="contingency">Contingency</label><input id="contingency" inputmode="numeric" pattern="[0-9]*" placeholder="0" enterkeyhint="next"></div>
+        <div><label for="approved">Approved</label><input id="approved" inputmode="numeric" pattern="[0-9]*" placeholder="0" enterkeyhint="next"></div>
+        <div><label for="contracts">Contracts</label><input id="contracts" inputmode="numeric" pattern="[0-9]*" placeholder="0" enterkeyhint="next"></div>
+        <div><label for="revenue">Revenue</label><div class="moneyin"><span>$</span><input id="revenue" inputmode="decimal" placeholder="0.00" enterkeyhint="next"></div></div>
+        <div><label for="soft_sets">Soft Sets</label><input id="soft_sets" inputmode="numeric" pattern="[0-9]*" placeholder="0" enterkeyhint="done"></div>
+      </div>
+      <p class="mute small" style="margin:14px 0 0">Each branch can submit once per day. If you make a mistake, contact accounting to have it corrected.</p>
+      <div id="msg" role="alert"></div>
+      <div class="submitbar"><button type="submit" id="go">Review &amp; submit</button></div>
+    </form>
+  </div>
+
+  <div class="card formcard" id="doneCard" hidden style="text-align:center;padding:30px 20px">
+    <div style="width:64px;height:64px;border-radius:50%;background:var(--good-soft);color:var(--good);display:grid;place-items:center;margin:0 auto 12px">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+    <h2 style="font-size:1.35rem">Numbers received</h2>
+    <p class="mute" id="doneText" style="margin:6px 0 18px"></p>
+    <button class="ghost" id="again">Submit for another branch</button>
+  </div>
+</main>
+
+<dialog id="review"><form method="dialog">
+  <h2>Check your numbers</h2>
+  <p class="mute small" id="reviewFor" style="margin:2px 0 12px"></p>
+  <div class="tiles" id="reviewTiles"></div>
+  <p class="mute small" style="margin:12px 0 0">You won't be able to change these after submitting.</p>
+  <div class="actions"><button class="ghost" value="back">Go back</button><button id="confirm" value="ok">Submit</button></div>
+</form></dialog>
+
 <script>
 const $ = (id) => document.getElementById(id);
+const FIELDS = [['knock','Knock'],['talk','Talk'],['walk','Walk'],['contingency','Contingency'],['approved','Approved'],['contracts','Contracts'],['revenue','Revenue'],['soft_sets','Soft Sets']];
 let today = '';
-const FIELDS = ['knock','talk','walk','contingency','approved','contracts','revenue','soft_sets'];
+const pretty = (iso) => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
 const msg = (t, ok) => { $('msg').className = 'msg ' + (ok ? 'ok' : 'err'); $('msg').textContent = t; };
 try { $('code').value = localStorage.getItem('gmCode') || ''; } catch {}
+
 fetch('/api/config').then(r => r.json()).then(c => {
-  $('branch').innerHTML = '<option value="">Choose your branch…</option>' + c.branches.map(b => `<option value="${b.id}">${b.name}</option>`).join('');
-  today = c.today; $('dateBox').textContent = new Date(today + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+  $('branch').innerHTML = '<option value="">Choose your branch…</option>' + c.branches.map(b => '<option value="' + b.id + '">' + b.name.trim() + '</option>').join('');
+  today = c.today; $('dateBox').textContent = pretty(today);
   $('codeRow').hidden = !c.needsCode;
   try { const s = localStorage.getItem('gmBranch'); if (s) $('branch').value = s; } catch {}
-});
-$('f').addEventListener('submit', async (e) => {
+}).catch(() => msg("Couldn't load the form. Check your connection and refresh.", false));
+
+const values = () => Object.fromEntries(FIELDS.map(([k]) => [k, $(k).value.trim()]));
+
+$('f').addEventListener('submit', (e) => {
   e.preventDefault();
-  const body = { branchId: $('branch').value, code: $('code').value };
-  FIELDS.forEach(k => body[k] = $(k).value);
-  const name = $('branch').selectedOptions[0].textContent;
-  if (!confirm(`Submit for ${name} for today (${today})? You won't be able to change it afterward.\nKnock ${body.knock||0} · Talk ${body.talk||0} · Walk ${body.walk||0} · Contingency ${body.contingency||0}\nApproved ${body.approved||0} · Contracts ${body.contracts||0} · Revenue $${body.revenue||0} · Soft Sets ${body.soft_sets||0}`)) return;
+  if (!$('branch').value) { msg('Choose your branch first.', false); $('branch').focus(); return; }
+  $('msg').textContent = ''; $('msg').className = '';
+  const v = values();
+  $('reviewFor').textContent = $('branch').selectedOptions[0].textContent + ' · ' + pretty(today);
+  $('reviewTiles').innerHTML = FIELDS.map(([k, l]) => '<div class="tile"><span>' + l + '</span><b>' + (k === 'revenue' ? '$' : '') + (v[k] || 0) + '</b></div>').join('');
+  $('review').showModal();
+});
+
+$('review').addEventListener('close', async () => {
+  if ($('review').returnValue !== 'ok') return;
   $('go').disabled = true;
+  const name = $('branch').selectedOptions[0].textContent;
+  const body = { branchId: $('branch').value, code: $('code').value, ...values() };
   try {
     const r = await fetch('/api/submit', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
     const d = await r.json();
     if (!r.ok) throw new Error(d.error);
     try { localStorage.setItem('gmBranch', body.branchId); if (body.code) localStorage.setItem('gmCode', body.code); } catch {}
-    msg(`Received — ${name}, ${d.date}. Thank you!`, true);
-    FIELDS.forEach(k => $(k).value = '');
+    $('doneText').textContent = name + ' · ' + pretty(d.date);
+    $('formCard').hidden = true; $('doneCard').hidden = false; window.scrollTo({ top: 0 });
   } catch (err) { msg(err.message, false); }
   $('go').disabled = false;
 });
+
+$('again').onclick = () => { FIELDS.forEach(([k]) => $(k).value = ''); $('branch').value = ''; $('doneCard').hidden = true; $('formCard').hidden = false; $('msg').textContent = ''; $('msg').className = ''; };
 </script></body></html>
