@@ -51,12 +51,33 @@ test('daily total adds up all branches and rolls into MTD + tracking', async () 
   assert.equal(r.daysWorked, 5);
 });
 
-test('resubmitting replaces rather than double counts', async () => {
+test('a branch can only submit once per date; accounting can edit or delete so it can resubmit', async () => {
   const { svc, id } = await setup();
-  await svc.submit({ branchId: id('Memphis'), date: '2026-10-05', metrics: { revenue: 100 } });
-  const again = await svc.submit({ branchId: id('Memphis'), date: '2026-10-05', metrics: { revenue: 300 } });
-  assert.equal(again.updated, true);
-  assert.equal((await svc.report('2026-10-05')).dayTotal.revenue, 300);
+  const memphis = id('Memphis');
+  await svc.submit({ branchId: memphis, date: '2026-10-05', metrics: { revenue: 100 } });
+
+  // second form submission for the same branch + date is refused and changes nothing
+  await assert.rejects(svc.submit({ branchId: memphis, date: '2026-10-05', metrics: { revenue: 300 } }),
+    (e) => e.status === 409 && /already been submitted for 10\/05\/2026/.test(e.message) && /Memphis/.test(e.message));
+  assert.equal((await svc.report('2026-10-05')).dayTotal.revenue, 100);
+
+  // another date or another branch is unaffected
+  await svc.submit({ branchId: memphis, date: '2026-10-06', metrics: { revenue: 5 } });
+  await svc.submit({ branchId: id('Vegas'), date: '2026-10-05', metrics: { revenue: 7 } });
+
+  // accounting edit replaces without double counting
+  const edited = await svc.submit({ branchId: memphis, date: '2026-10-05', metrics: { revenue: 300 }, source: 'accounting', replace: true });
+  assert.equal(edited.updated, true);
+  assert.equal((await svc.report('2026-10-05')).dayTotal.revenue, 307);
+
+  // delete -> shows as missing -> branch can submit again
+  await svc.deleteSubmission(memphis, '2026-10-05');
+  let r = await svc.report('2026-10-05');
+  assert.equal(r.dayTotal.revenue, 7);
+  assert.ok(r.missing.includes('Memphis'));
+  await svc.submit({ branchId: memphis, date: '2026-10-05', metrics: { revenue: 150 } });
+  assert.equal((await svc.report('2026-10-05')).dayTotal.revenue, 157);
+  await assert.rejects(svc.deleteSubmission(id('Tupelo'), '2026-10-05'), /No submission found/);
 });
 
 test('rejects bad input', async () => {

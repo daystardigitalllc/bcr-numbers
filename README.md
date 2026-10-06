@@ -3,9 +3,11 @@
 Replaces the nightly GroupMe number reports. GMs fill out a form; accounting sees every branch's numbers,
 the daily total, MTD and tracking figures calculated automatically (what the spreadsheet did by hand).
 
-- `/` — GM form (Knock, Talk, Walk, Contingency, Approved, Contracts, Revenue, Soft Sets)
+- `/` — GM form (Knock, Talk, Walk, Contingency, Approved, Contracts, Revenue, Soft Sets). The date is locked to today
+  (server-side, in `TZ_NAME`), and each branch can submit **once per day**; a repeat gets an "already submitted" error.
 - `/dashboard` — accounting view: per-branch table, who hasn't reported, Daily Total, Old/New MTD,
-  Tracking Daily, Tracking For Month, edit/enter on behalf of a GM, copy GroupMe-style recap, Setup tab
+  Tracking Daily, Tracking For Month, a "Not yet submitted" list for the day, Edit / Enter / Delete on any branch
+  (delete lets the branch resubmit; every change is kept in `submission_log`), copy GroupMe-style recap, Setup tab
 
 Built for **Cloudflare Pages + D1**, same layout as the mirewood site: static files in `public/`, API as a
 Pages Function in `functions/api/`, no build step, no runtime dependencies.

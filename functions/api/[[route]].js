@@ -40,9 +40,8 @@ async function handle({ request, env }) {
       await svc.throttle(ip, ok);
       if (!ok) throw new HttpError(401, 'Wrong access code');
     }
-    const today = svc.today(tz);
-    const date = b.date || today;
-    if (date > today) throw new HttpError(400, "Date can't be in the future");
+    // The date is always the server's "today" -- anything the browser sends is ignored.
+    const date = svc.today(tz);
     const r = await svc.submit({ branchId: Number(b.branchId), date, metrics: b, source: 'form' });
     return json({ ok: true, date, ...r });
   }
@@ -59,7 +58,12 @@ async function handle({ request, env }) {
   if (m === 'GET' && p === '/api/admin/report') return json(await svc.report(url.searchParams.get('date') || svc.today(tz)));
   if (m === 'POST' && p === '/api/admin/submit') {
     const b = await readJson(request);
-    return json({ ok: true, ...(await svc.submit({ branchId: Number(b.branchId), date: b.date, metrics: b, source: 'accounting' })) });
+    return json({ ok: true, ...(await svc.submit({ branchId: Number(b.branchId), date: b.date, metrics: b, source: 'accounting', replace: true })) });
+  }
+  if (m === 'DELETE' && p.startsWith('/api/admin/submissions/')) {
+    const [, , , , date, branchId] = p.split('/'); // /api/admin/submissions/<date>/<branchId>
+    await svc.deleteSubmission(Number(branchId), date);
+    return json({ ok: true });
   }
   if (m === 'GET' && p === '/api/admin/setup')
     return json({ branches: await svc.branches(true), holidays: await svc.holidays(), baselines: await svc.baselines() });

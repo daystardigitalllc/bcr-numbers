@@ -17,6 +17,7 @@
       <span id="count" class="mute"></span>
     </div>
     <div id="note" class="msg" hidden style="background:var(--warn)"></div>
+    <div class="card" id="missingCard"><h1 id="missingTitle" style="font-size:1.05rem"></h1><div class="chips" id="missingChips"></div></div>
     <div class="card"><div class="stats" id="stats"></div></div>
     <div class="card scroll"><table id="tbl"></table></div>
     <div class="card" id="editor" hidden>
@@ -74,7 +75,11 @@ document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
 
 async function load() {
   rep = await call('GET', '/api/admin/report?date=' + $('rdate').value);
-  $('count').textContent = `${rep.submittedCount} of ${rep.rows.length} branches reported` + (rep.missing.length ? ` · missing: ${rep.missing.join(', ')}` : '');
+  $('count').textContent = `${rep.submittedCount} of ${rep.rows.length} branches reported`;
+  const miss = rep.rows.filter(r => !r.submitted && r.active);
+  $('missingTitle').textContent = miss.length ? `Not yet submitted (${miss.length})` : `All ${rep.rows.length} branches have submitted ✓`;
+  $('missingChips').innerHTML = miss.map(r => `<span class="chip">${esc(r.branch)}<button class="ghost small" data-id="${r.branchId}">Enter</button></span>`).join('');
+  $('missingChips').querySelectorAll('button[data-id]').forEach(b => b.onclick = () => edit(Number(b.dataset.id)));
   $('note').hidden = !rep.note; $('note').textContent = rep.note || '';
   $('stats').innerHTML = [
     ['Revenue today', fmt('revenue', rep.dayTotal.revenue)],
@@ -85,10 +90,15 @@ async function load() {
   ].map(([a, b]) => `<div class="stat"><span class="mute">${a}</span><b>${b}</b></div>`).join('');
   const sumRow = (cls, label, o) => `<tr class="${cls}"><td>${label}</td>${M.map(([k]) => `<td>${fmt(k, o[k])}</td>`).join('')}<td></td></tr>`;
   $('tbl').innerHTML = `<tr><th>Branch</th>${M.map(([, l]) => `<th>${l}</th>`).join('')}<th></th></tr>` +
-    rep.rows.map(r => `<tr class="${r.submitted ? '' : 'missing'}"><td>${esc(r.branch)}</td>${M.map(([k]) => `<td>${fmt(k, r[k])}</td>`).join('')}<td><button class="ghost small" data-id="${r.branchId}">${r.submitted ? 'Edit' : 'Enter'}</button></td></tr>`).join('') +
+    rep.rows.map(r => `<tr class="${r.submitted ? '' : 'missing'}"><td>${esc(r.branch)}</td>${M.map(([k]) => `<td>${fmt(k, r[k])}</td>`).join('')}<td><button class="ghost small" data-id="${r.branchId}">${r.submitted ? 'Edit' : 'Enter'}</button>${r.submitted ? ` <button class="danger small" data-del="${r.branchId}">Delete</button>` : ''}</td></tr>`).join('') +
     sumRow('total', 'Daily Total', rep.dayTotal) + sumRow('sum', 'Old MTD', rep.oldMtd) + sumRow('sum', 'New MTD', rep.newMtd) +
     sumRow('sum', `Tracking Daily (÷ ${rep.daysWorked} days)`, rep.trackingDaily) + sumRow('sum', `Tracking For Month (× ${rep.totalDays} days)`, rep.trackingMonth);
   $('tbl').querySelectorAll('button[data-id]').forEach(b => b.onclick = () => edit(Number(b.dataset.id)));
+  $('tbl').querySelectorAll('button[data-del]').forEach(b => b.onclick = async () => {
+    const r = rep.rows.find(x => x.branchId === Number(b.dataset.del));
+    if (!confirm(`Delete ${r.branch}'s numbers for ${rep.date}?\n\nThey'll show as not submitted and can submit again from the form.`)) return;
+    try { await call('DELETE', `/api/admin/submissions/${rep.date}/${r.branchId}`); load(); } catch (e) { alert(e.message); }
+  });
 }
 $('rdate').onchange = load;
 const shift = (n) => { const d = new Date($('rdate').value + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); $('rdate').value = d.toISOString().slice(0, 10); load(); };

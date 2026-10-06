@@ -40,23 +40,48 @@ export function createService(db, { now = () => new Date() } = {}) {
   const branches = (includeInactive = false) =>
     all(`SELECT id, name, active FROM branches ${includeInactive ? '' : 'WHERE active = 1'} ORDER BY sort, id`);
 
-  async function submit({ branchId, date, metrics, source = 'form' }) {
+  const usDate = (d) => `${d.slice(5, 7)}/${d.slice(8, 10)}/${d.slice(0, 4)}`;
+
+  // Form submissions never overwrite: a branch can only submit once per date (409 if it already has).
+  // Accounting passes replace:true to correct a branch's numbers.
+  async function submit({ branchId, date, metrics, source = 'form', replace = false }) {
     if (!isValidDate(date)) throw new HttpError(400, 'invalid date');
-    const branch = await first('SELECT id, active FROM branches WHERE id = ?', branchId);
+    const branch = await first('SELECT id, name, active FROM branches WHERE id = ?', branchId);
     if (!branch || (!branch.active && source === 'form')) throw new HttpError(400, 'unknown branch');
     const m = parseMetrics(metrics);
     const at = now().toISOString();
+    const dup = new HttpError(409, `Numbers for ${branch.name.trim()} have already been submitted for ${usDate(date)}. If something is wrong, contact accounting to have it corrected.`);
     const existed = !!(await first('SELECT 1 AS x FROM submissions WHERE branch_id = ? AND date = ?', branch.id, date));
-    await db.batch([
-      db.prepare(`INSERT INTO submissions (branch_id, date, ${METRICS.join(',')}, source, submitted_at)
-                  VALUES (?, ?, ${METRICS.map(() => '?').join(',')}, ?, ?)
-                  ON CONFLICT (branch_id, date) DO UPDATE SET
-                    ${METRICS.map((k) => `${k} = excluded.${k}`).join(', ')}, source = excluded.source, submitted_at = excluded.submitted_at`)
-        .bind(branch.id, date, ...METRICS.map((k) => m[k]), source, at),
-      db.prepare('INSERT INTO submission_log (branch_id, date, payload, source, at) VALUES (?, ?, ?, ?, ?)')
-        .bind(branch.id, date, JSON.stringify(m), source, at),
-    ]);
+    if (existed && !replace) throw dup;
+    const cols = `branch_id, date, ${METRICS.join(',')}, source, submitted_at`;
+    const marks = `?, ?, ${METRICS.map(() => '?').join(',')}, ?, ?`;
+    const upsert = replace
+      ? ` ON CONFLICT (branch_id, date) DO UPDATE SET ${METRICS.map((k) => `${k} = excluded.${k}`).join(', ')}, source = excluded.source, submitted_at = excluded.submitted_at`
+      : '';
+    try {
+      await db.batch([
+        db.prepare(`INSERT INTO submissions (${cols}) VALUES (${marks})${upsert}`)
+          .bind(branch.id, date, ...METRICS.map((k) => m[k]), source, at),
+        db.prepare('INSERT INTO submission_log (branch_id, date, payload, source, at) VALUES (?, ?, ?, ?, ?)')
+          .bind(branch.id, date, JSON.stringify(m), source, at),
+      ]);
+    } catch (e) {
+      if (!replace && /UNIQUE|constraint/i.test(String(e.message))) throw dup; // lost a race with a simultaneous submit
+      throw e;
+    }
     return { updated: existed, metrics: m };
+  }
+
+  // Accounting: remove a submission entirely so the branch can submit again. Kept in the audit log.
+  async function deleteSubmission(branchId, date) {
+    if (!isValidDate(date)) throw new HttpError(400, 'invalid date');
+    const row = await first('SELECT * FROM submissions WHERE branch_id = ? AND date = ?', branchId, date);
+    if (!row) throw new HttpError(404, 'No submission found for that branch and date');
+    await db.batch([
+      db.prepare('DELETE FROM submissions WHERE branch_id = ? AND date = ?').bind(branchId, date),
+      db.prepare('INSERT INTO submission_log (branch_id, date, payload, source, at) VALUES (?, ?, ?, ?, ?)')
+        .bind(branchId, date, JSON.stringify({ deleted: Object.fromEntries(METRICS.map((k) => [k, row[k]])) }), 'accounting-delete', now().toISOString()),
+    ]);
   }
 
   async function sumRange(from, to) {
@@ -95,7 +120,7 @@ export function createService(db, { now = () => new Date() } = {}) {
   }
 
   return {
-    branches, submit, report,
+    branches, submit, deleteSubmission, report,
     today: (tz) => new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).format(now()),
 
     async addBranch(name) {
