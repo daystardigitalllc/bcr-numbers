@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Numbers Dashboard</title><link rel="stylesheet" href="/style.css"></head>
+<body><div class="wrap wide">
+<div id="login" class="card" style="max-width:380px">
+  <h1>Accounting login</h1><label for="pw">Password</label><input id="pw" type="password">
+  <p><button id="loginBtn">Sign in</button></p><div id="loginMsg"></div>
+</div>
+<div id="app" hidden>
+  <div class="tabs"><button class="on" data-tab="report">Daily report</button><button data-tab="setup">Setup</button></div>
+
+  <section id="report">
+    <div class="card row">
+      <div><label for="rdate">Date</label><input id="rdate" type="date"></div>
+      <button class="ghost" id="prev">◀ Prev</button><button class="ghost" id="next">Next ▶</button>
+      <button class="ghost" id="copy">Copy GroupMe recap</button>
+      <span id="count" class="mute"></span>
+    </div>
+    <div id="note" class="msg" hidden style="background:var(--warn)"></div>
+    <div class="card"><div class="stats" id="stats"></div></div>
+    <div class="card scroll"><table id="tbl"></table></div>
+    <div class="card" id="editor" hidden>
+      <h1 id="editTitle"></h1>
+      <div class="grid" id="editGrid"></div>
+      <p><button id="saveEdit">Save</button> <button class="ghost" id="cancelEdit">Cancel</button></p><div id="editMsg"></div>
+    </div>
+  </section>
+
+  <section id="setup" hidden>
+    <div class="card"><h1>Month-to-date carry-in</h1>
+      <p class="mute">Starting MTD for a month (e.g. the final MTD from the old spreadsheet). Submissions dated after “through” are added on top automatically.</p>
+      <div class="scroll"><table id="baseTbl"></table></div>
+      <h1 style="margin-top:16px;font-size:1rem">Add / replace</h1>
+      <div class="grid" id="baseGrid"></div><p><button id="saveBase">Save carry-in</button></p><div id="baseMsg"></div></div>
+    <div class="card"><h1>Holidays (non-workable days)</h1>
+      <p class="mute">Sundays are always off. Add company holidays that fall Mon–Sat so days worked / total days stay right.</p>
+      <div class="row"><div><label>Date</label><input id="hDate" type="date"></div><div><label>Name</label><input id="hName"></div><button id="addHol">Add</button></div>
+      <table id="holTbl"></table></div>
+    <div class="card"><h1>Branches</h1>
+      <div class="row"><div><label>New branch</label><input id="bName"></div><button id="addBranch">Add</button></div>
+      <table id="brTbl"></table></div>
+  </section>
+</div></div>
+<script>
+const $ = (id) => document.getElementById(id);
+const M = [['knock','Knock'],['talk','Talk'],['walk','Walk'],['contingency','Contingency'],['approved','Approved'],['contracts','Contracts'],['revenue','Revenue'],['soft_sets','Soft Sets']];
+let pw = ''; try { pw = sessionStorage.getItem('pw') || ''; } catch {}
+let rep = null, editing = null;
+
+const fmt = (k, v) => v == null ? '—' : k === 'revenue' ? v.toLocaleString('en-US', { style: 'currency', currency: 'USD' }) : v.toLocaleString('en-US', { maximumFractionDigits: 2 });
+const esc = (s) => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function call(method, url, body) {
+  const r = await fetch(url, { method, headers: { 'content-type': 'application/json', 'x-admin-password': pw }, body: body ? JSON.stringify(body) : undefined });
+  const d = await r.json();
+  if (!r.ok) { if (r.status === 401) showLogin(); throw new Error(d.error); }
+  return d;
+}
+const flash = (el, t, ok) => { el.className = 'msg ' + (ok ? 'ok' : 'err'); el.textContent = t; };
+function showLogin() { $('app').hidden = true; $('login').hidden = false; }
+
+async function login() {
+  pw = $('pw').value || pw;
+  try { await call('POST', '/api/admin/check'); try { sessionStorage.setItem('pw', pw); } catch {}
+    $('login').hidden = true; $('app').hidden = false; $('rdate').value = (await (await fetch('/api/config')).json()).today; load(); loadSetup();
+  } catch (e) { flash($('loginMsg'), e.message, false); }
+}
+$('loginBtn').onclick = login; $('pw').onkeydown = (e) => e.key === 'Enter' && login();
+if (pw) login();
+
+document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('.tabs button').forEach(x => x.classList.toggle('on', x === b));
+  $('report').hidden = b.dataset.tab !== 'report'; $('setup').hidden = b.dataset.tab !== 'setup';
+});
+
+async function load() {
+  rep = await call('GET', '/api/admin/report?date=' + $('rdate').value);
+  $('count').textContent = `${rep.submittedCount} of ${rep.rows.length} branches reported` + (rep.missing.length ? ` · missing: ${rep.missing.join(', ')}` : '');
+  $('note').hidden = !rep.note; $('note').textContent = rep.note || '';
+  $('stats').innerHTML = [
+    ['Revenue today', fmt('revenue', rep.dayTotal.revenue)],
+    ['Revenue MTD', fmt('revenue', rep.newMtd.revenue)],
+    ['Days worked / total', `${rep.daysWorked} / ${rep.totalDays}`],
+    ['Tracking daily (revenue)', fmt('revenue', rep.trackingDaily.revenue)],
+    ['Tracking for month (revenue)', fmt('revenue', rep.trackingMonth.revenue)],
+  ].map(([a, b]) => `<div class="stat"><span class="mute">${a}</span><b>${b}</b></div>`).join('');
+  const sumRow = (cls, label, o) => `<tr class="${cls}"><td>${label}</td>${M.map(([k]) => `<td>${fmt(k, o[k])}</td>`).join('')}<td></td></tr>`;
+  $('tbl').innerHTML = `<tr><th>Branch</th>${M.map(([, l]) => `<th>${l}</th>`).join('')}<th></th></tr>` +
+    rep.rows.map(r => `<tr class="${r.submitted ? '' : 'missing'}"><td>${esc(r.branch)}</td>${M.map(([k]) => `<td>${fmt(k, r[k])}</td>`).join('')}<td><button class="ghost small" data-id="${r.branchId}">${r.submitted ? 'Edit' : 'Enter'}</button></td></tr>`).join('') +
+    sumRow('total', 'Daily Total', rep.dayTotal) + sumRow('sum', 'Old MTD', rep.oldMtd) + sumRow('sum', 'New MTD', rep.newMtd) +
+    sumRow('sum', `Tracking Daily (÷ ${rep.daysWorked} days)`, rep.trackingDaily) + sumRow('sum', `Tracking For Month (× ${rep.totalDays} days)`, rep.trackingMonth);
+  $('tbl').querySelectorAll('button[data-id]').forEach(b => b.onclick = () => edit(Number(b.dataset.id)));
+}
+$('rdate').onchange = load;
+const shift = (n) => { const d = new Date($('rdate').value + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); $('rdate').value = d.toISOString().slice(0, 10); load(); };
+$('prev').onclick = () => shift(-1); $('next').onclick = () => shift(1);
+
+$('copy').onclick = async () => {
+  const money = (v) => '$' + (v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const txt = rep.rows.filter(r => r.submitted).map(r => `${r.branch}: ${r.contingency}-${r.approved}-${r.contracts}-${money(r.revenue)}-${r.soft_sets}`).join('\n');
+  try { await navigator.clipboard.writeText(txt); $('count').textContent = 'Recap copied'; } catch { prompt('Copy:', txt); }
+};
+
+function edit(id) {
+  const r = rep.rows.find(x => x.branchId === id); editing = id;
+  $('editTitle').textContent = `${r.branch} — ${rep.date}`;
+  $('editGrid').innerHTML = M.map(([k, l]) => `<div><label>${l}</label><input data-k="${k}" inputmode="decimal" value="${r[k] ?? ''}"></div>`).join('');
+  $('editor').hidden = false; $('editMsg').textContent = ''; $('editor').scrollIntoView();
+}
+$('cancelEdit').onclick = () => $('editor').hidden = true;
+$('saveEdit').onclick = async () => {
+  const body = { branchId: editing, date: rep.date };
+  $('editGrid').querySelectorAll('input').forEach(i => body[i.dataset.k] = i.value);
+  try { await call('POST', '/api/admin/submit', body); $('editor').hidden = true; load(); } catch (e) { flash($('editMsg'), e.message, false); }
+};
+
+async function loadSetup() {
+  const s = await call('GET', '/api/admin/setup');
+  $('baseTbl').innerHTML = `<tr><th>Month</th><th>Through</th>${M.map(([, l]) => `<th>${l}</th>`).join('')}<th></th></tr>` +
+    s.baselines.map(b => `<tr><td>${b.month}</td><td>${b.through_date}</td>${M.map(([k]) => `<td>${fmt(k, b[k])}</td>`).join('')}<td><button class="ghost small" data-del="${b.month}">Remove</button></td></tr>`).join('');
+  $('baseTbl').querySelectorAll('[data-del]').forEach(b => b.onclick = async () => { if (confirm('Remove this carry-in?')) { await call('DELETE', '/api/admin/baselines/' + b.dataset.del); loadSetup(); load(); } });
+  $('holTbl').innerHTML = s.holidays.map(h => `<tr><td>${h.date}</td><td>${esc(h.name)}</td><td><button class="ghost small" data-hd="${h.date}">Remove</button></td></tr>`).join('') || '<tr><td class="mute">None yet</td></tr>';
+  $('holTbl').querySelectorAll('[data-hd]').forEach(b => b.onclick = async () => { await call('DELETE', '/api/admin/holidays/' + b.dataset.hd); loadSetup(); load(); });
+  $('brTbl').innerHTML = s.branches.map(b => `<tr><td>${esc(b.name)}</td><td>${b.active ? '' : '<span class="mute">inactive</span>'}</td><td><button class="ghost small" data-br="${b.id}" data-on="${b.active ? 0 : 1}">${b.active ? 'Deactivate' : 'Reactivate'}</button></td></tr>`).join('');
+  $('brTbl').querySelectorAll('[data-br]').forEach(b => b.onclick = async () => { await call('PATCH', '/api/admin/branches/' + b.dataset.br, { active: b.dataset.on === '1' }); loadSetup(); load(); });
+}
+$('baseGrid').innerHTML = '<div><label>Month (YYYY-MM)</label><input id="bMonth" placeholder="2026-11"></div><div><label>Through date</label><input id="bThru" type="date"></div>' +
+  M.map(([k, l]) => `<div><label>${l} MTD</label><input data-bk="${k}" inputmode="decimal"></div>`).join('');
+$('saveBase').onclick = async () => {
+  const body = { month: $('bMonth').value, through_date: $('bThru').value };
+  $('baseGrid').querySelectorAll('[data-bk]').forEach(i => body[i.dataset.bk] = i.value);
+  try { await call('POST', '/api/admin/baselines', body); flash($('baseMsg'), 'Saved', true); loadSetup(); load(); } catch (e) { flash($('baseMsg'), e.message, false); }
+};
+$('addHol').onclick = async () => { try { await call('POST', '/api/admin/holidays', { date: $('hDate').value, name: $('hName').value }); $('hName').value = ''; loadSetup(); load(); } catch (e) { alert(e.message); } };
+$('addBranch').onclick = async () => { try { await call('POST', '/api/admin/branches', { name: $('bName').value }); $('bName').value = ''; loadSetup(); } catch (e) { alert(e.message); } };
+</script></body></html>
