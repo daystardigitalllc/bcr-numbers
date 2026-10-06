@@ -65,7 +65,7 @@ async function login() {
     $('login').hidden = true; $('app').hidden = false; $('rdate').value = (await (await fetch('/api/config')).json()).today; load(); loadSetup();
   } catch (e) { flash($('loginMsg'), e.message, false); }
 }
-$('loginBtn').onclick = login; $('pw').onkeydown = (e) => e.key === 'Enter' && login();
+$('loginBtn').onclick = login; $('pw').addEventListener('keydown', (e) => { if (e.key === 'Enter') login(); });
 if (pw) login();
 
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => {
