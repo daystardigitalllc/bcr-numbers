@@ -4,7 +4,7 @@ on:
   schedule:
     # Two UTC times so it lands at the local send hour in both daylight and standard time;
     # the script only sends when the local hour (TZ_NAME) equals SEND_HOUR. :07 avoids the top-of-hour rush.
-    - cron: '7 2,3 * * *'
+    - cron: '7 3,4 * * *'
   workflow_dispatch:
     inputs:
       date:
@@ -34,10 +34,12 @@ jobs:
         env:
           SITE_URL: ${{ vars.SITE_URL }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          SMTP_USER: ${{ vars.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           REPORT_FROM: ${{ vars.REPORT_FROM }}
           REPORT_TO: ${{ vars.REPORT_TO }}
-          TZ_NAME: ${{ vars.TZ_NAME || 'America/New_York' }}
+          TZ_NAME: ${{ vars.TZ_NAME || 'America/Chicago' }}
           # Scheduled runs only fire at the send hour; manual runs go immediately.
           GATE_HOUR: ${{ github.event_name == 'schedule' && (vars.SEND_HOUR || '22') || '' }}
           REPORT_DATE: ${{ inputs.date }}

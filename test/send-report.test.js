@@ -9,7 +9,7 @@ import { createD1 } from './d1shim.js';
 const { run } = await import('../tools/send-report.mjs');
 
 const sample = JSON.parse(readFileSync(new URL('../sample/2026-10-05.json', import.meta.url), 'utf8'));
-const NOW = new Date('2026-10-06T02:30:00Z'); // 10:30pm Mon Oct 5 in New York (EDT)
+const NOW = new Date('2026-10-06T03:30:00Z'); // 10:30pm Mon Oct 5 in Chicago (CDT)
 
 async function world({ skip = [], submit = true } = {}) {
   const svc = createService(createD1());
@@ -99,5 +99,32 @@ test('fails loudly (so the workflow goes red) on a bad password or a Resend erro
     w.setResend(422);
     await assert.rejects(run(w.env, { now: NOW }), /Resend rejected the email \(422\)/);
     await assert.rejects(run({ ...w.env, REPORT_FROM: '' }, { now: NOW }), /REPORT_FROM is required/);
+    await assert.rejects(run({ ...w.env, RESEND_API_KEY: '' }, { now: NOW }), /Set SMTP_USER \+ SMTP_PASS/);
+  } finally { w.close(); }
+});
+
+test('Gmail/SMTP path (no domain, no Resend): same email, sent through the mail server', async () => {
+  const { createRequire } = await import('node:module');
+  const nodemailer = createRequire(new URL('../tools/package.json', import.meta.url))('nodemailer');
+  const w = await world();
+  const mails = [];
+  const fake = { sendMail: async (m) => { mails.push(m); } };
+  try {
+    const env = { SITE_URL: w.env.SITE_URL, ADMIN_PASSWORD: 'pw', SMTP_USER: 'bcrnumbers@gmail.com', SMTP_PASS: 'abcd efgh ijkl mnop', REPORT_TO: 'a@x.com,b@x.com', GATE_HOUR: '22' };
+    const r = await run(env, { now: NOW, createTransport: () => fake });
+    assert.equal(r.sent, true);
+    assert.equal(w.sent.length, 0, 'Resend is not used when SMTP is configured');
+    const m = mails[0];
+    assert.equal(m.from, 'bcrnumbers@gmail.com'); // defaults to the Gmail address
+    assert.deepEqual(m.to, ['a@x.com', 'b@x.com']);
+    assert.equal(m.subject, 'Company Numbers – 10/05/26');
+    assert.deepEqual(m.attachments.map((a) => a.cid), ['summary', 'branches-1', 'branches-2']);
+    assert.ok(Buffer.isBuffer(m.attachments[0].content) && m.attachments[0].content.subarray(1, 4).toString() === 'PNG');
+    // nodemailer itself accepts and builds the message (inline images + attachments + html + text)
+    const built = JSON.parse((await nodemailer.createTransport({ jsonTransport: true }).sendMail(m)).message);
+    assert.equal(built.attachments.length, 3);
+    assert.ok(built.html.includes('cid:summary') && built.text.includes('COMPANY NUMBERS'));
+    // a rejected login surfaces as a failure
+    await assert.rejects(run(env, { now: NOW, createTransport: () => ({ sendMail: async () => { throw new Error('Invalid login'); } }) }), /Email server rejected the message: Invalid login/);
   } finally { w.close(); }
 });

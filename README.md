@@ -54,17 +54,26 @@ Every push to the connected branch redeploys automatically. Backups: D1 has buil
 (`.github/workflows/nightly-report.yml`), not on Cloudflare: rendering PNGs needs more CPU than Cloudflare's free
 plan allows, and Actions is free.
 
-One-time setup, in the GitHub repo -> Settings -> Secrets and variables -> Actions:
+One-time setup, in the GitHub repo -> Settings -> Secrets and variables -> Actions.
+
+**Sending through Gmail (free, no domain needed)** - recommended:
+1. Make a Gmail account just for this (e.g. `bcrnumbers@gmail.com`) and turn on 2-Step Verification.
+2. Go to <https://myaccount.google.com/apppasswords>, create an app password (16 characters).
+3. Add to GitHub:
 
 | Kind | Name | Value |
 |---|---|---|
 | Secret | `ADMIN_PASSWORD` | the same dashboard password set in Cloudflare |
-| Secret | `RESEND_API_KEY` | Resend API key (needs a verified sending domain) |
+| Secret | `SMTP_PASS` | the 16-character app password |
+| Variable | `SMTP_USER` | the Gmail address |
 | Variable | `SITE_URL` | your Pages URL, e.g. `https://bcr-numbers.pages.dev` |
-| Variable | `REPORT_FROM` | e.g. `Best Choice Numbers <numbers@yourdomain.com>` (must be on the verified domain) |
 | Variable | `REPORT_TO` | comma-separated recipient list |
-| Variable (optional) | `SEND_HOUR` | local hour to send, 0-23 (default `22` = 10pm) |
-| Variable (optional) | `TZ_NAME` | default `America/New_York` |
+| Variable (optional) | `SEND_HOUR` | local hour to send, 0-23 (default `22` = 10pm Central) |
+| Variable (optional) | `TZ_NAME` | default `America/Chicago` (HQ time; also sets what "today" means on the form) |
+
+Gmail allows ~500 emails/day per account, far more than needed.
+
+**Or Resend** (needs a verified domain): set secret `RESEND_API_KEY` and variable `REPORT_FROM` instead of the two `SMTP_*` entries.
 
 The workflow must be on the repository's **default branch** for the schedule and the "Run workflow" button to work.
 Test it any time: Actions -> *Nightly numbers email* -> Run workflow (fill `test_to` to send only to yourself,

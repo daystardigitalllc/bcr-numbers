@@ -3,8 +3,11 @@
 // Runs in GitHub Actions (.github/workflows/nightly-report.yml); can also be run by hand:
 //   SITE_URL=... ADMIN_PASSWORD=... RESEND_API_KEY=... REPORT_FROM=... REPORT_TO=a@x.com,b@x.com node tools/send-report.mjs
 //
-// Env: SITE_URL, ADMIN_PASSWORD, RESEND_API_KEY, REPORT_FROM, REPORT_TO (comma list)   -- required
-//      TZ_NAME (default America/New_York), REPORT_DATE (YYYY-MM-DD, default today in TZ_NAME)
+// Env: SITE_URL, ADMIN_PASSWORD, REPORT_TO (comma list)   -- required
+//      plus ONE way to send:
+//        Gmail/SMTP (free, no domain): SMTP_USER, SMTP_PASS (a Google "app password"); optional SMTP_HOST/SMTP_PORT, REPORT_FROM
+//        Resend (needs a verified domain): RESEND_API_KEY, REPORT_FROM
+//      TZ_NAME (default America/Chicago), REPORT_DATE (YYYY-MM-DD, default today in TZ_NAME)
 //      GATE_HOUR   only send if the local hour in TZ_NAME equals this (used by the scheduled run)
 //      TEST_TO     send only to this address instead of REPORT_TO
 //      DRY_RUN=1   write ./out/* and print the email instead of sending
@@ -62,13 +65,26 @@ export function buildEmail({ data, pngs, text, from, to }) {
   };
 }
 
-export async function run(env = process.env, { fetchImpl = fetch, now = new Date() } = {}) {
-  for (const k of ['SITE_URL', 'ADMIN_PASSWORD', 'REPORT_FROM']) if (!env[k]) throw new Error(`${k} is required`);
-  if (!env.DRY_RUN && !env.RESEND_API_KEY) throw new Error('RESEND_API_KEY is required');
+async function defaultTransport(env) {
+  const { default: nodemailer } = await import('nodemailer');
+  return nodemailer.createTransport({
+    host: env.SMTP_HOST || 'smtp.gmail.com',
+    port: Number(env.SMTP_PORT || 465),
+    secure: Number(env.SMTP_PORT || 465) === 465,
+    auth: { user: env.SMTP_USER, pass: env.SMTP_PASS },
+  });
+}
+
+export async function run(env = process.env, { fetchImpl = fetch, now = new Date(), createTransport = defaultTransport } = {}) {
+  for (const k of ['SITE_URL', 'ADMIN_PASSWORD']) if (!env[k]) throw new Error(`${k} is required`);
+  const useSmtp = !!(env.SMTP_USER && env.SMTP_PASS);
+  const from = env.REPORT_FROM || (useSmtp ? env.SMTP_USER : '');
+  if (!from) throw new Error('REPORT_FROM is required');
+  if (!env.DRY_RUN && !useSmtp && !env.RESEND_API_KEY) throw new Error('Set SMTP_USER + SMTP_PASS (Gmail) or RESEND_API_KEY to send email');
   const to = (env.TEST_TO || env.REPORT_TO || '').split(',').map((s) => s.trim()).filter(Boolean);
   if (!to.length && !env.DRY_RUN) throw new Error('REPORT_TO (or TEST_TO) is required');
 
-  const tz = env.TZ_NAME || 'America/New_York';
+  const tz = env.TZ_NAME || 'America/Chicago';
   const local = localParts(tz, now);
   if (env.GATE_HOUR && Number(env.GATE_HOUR) !== local.hour) {
     console.log(`Local time in ${tz} is hour ${local.hour}, not ${env.GATE_HOUR}; nothing to do.`);
@@ -86,7 +102,7 @@ export async function run(env = process.env, { fetchImpl = fetch, now = new Date
   }
 
   const data = reportToData(body);
-  const email = buildEmail({ data, pngs: renderMobileSet(data), text: groupmeText(data), from: env.REPORT_FROM, to });
+  const email = buildEmail({ data, pngs: renderMobileSet(data), text: groupmeText(data), from, to });
 
   if (env.DRY_RUN) {
     mkdirSync('out', { recursive: true });
@@ -97,12 +113,20 @@ export async function run(env = process.env, { fetchImpl = fetch, now = new Date
     return { dryRun: true, email };
   }
 
-  const send = await fetchImpl(`${env.RESEND_API_URL || 'https://api.resend.com'}/emails`, {
-    method: 'POST',
-    headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
-    body: JSON.stringify(email),
-  });
-  if (!send.ok) throw new Error(`Resend rejected the email (${send.status}): ${await send.text()}`);
+  if (useSmtp) {
+    const transport = await createTransport(env);
+    await transport.sendMail({
+      from: email.from, to: email.to, subject: email.subject, text: email.text, html: email.html,
+      attachments: email.attachments.map((a) => ({ filename: a.filename, content: Buffer.from(a.content, 'base64'), cid: a.content_id })),
+    }).catch((e) => { throw new Error(`Email server rejected the message: ${e.message}`); });
+  } else {
+    const send = await fetchImpl(`${env.RESEND_API_URL || 'https://api.resend.com'}/emails`, {
+      method: 'POST',
+      headers: { authorization: `Bearer ${env.RESEND_API_KEY}`, 'content-type': 'application/json' },
+      body: JSON.stringify(email),
+    });
+    if (!send.ok) throw new Error(`Resend rejected the email (${send.status}): ${await send.text()}`);
+  }
   console.log(`Sent "${email.subject}" to ${to.length} recipient(s); ${body.submittedCount} of ${body.rows.length} branches reported.`);
   return { sent: true, email };
 }

@@ -24,7 +24,7 @@ async function handle({ request, env }) {
   if (!env.DB) throw new HttpError(500, 'Database is not configured (missing D1 binding named DB).');
   if (!env.ADMIN_PASSWORD) throw new HttpError(500, 'ADMIN_PASSWORD is not configured.');
   const svc = createService(env.DB);
-  const tz = env.TZ_NAME || 'America/New_York';
+  const tz = env.TZ_NAME || 'America/Chicago';
   const url = new URL(request.url);
   const p = url.pathname.replace(/\/+$/, '');
   const m = request.method;

@@ -5,6 +5,7 @@
   "description": "Local-only tooling (image preview). Not used by the Cloudflare deploy.",
   "dependencies": {
     "@expo-google-fonts/barlow-condensed": "^0.2.3",
-    "@resvg/resvg-js": "^2.6.2"
+    "@resvg/resvg-js": "^2.6.2",
+    "nodemailer": "^10.0.15"
   }
 }
