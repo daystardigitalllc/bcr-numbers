@@ -1,5 +1,6 @@
 /* Shared design system for the GM form and the accounting dashboard. */
 :root{
+  --bar:63px;
   --bg:#f2f4f8;--surface:#fff;--surface-2:#f7f8fb;--ink:#101828;--mute:#5a6578;--line:#e1e5ec;
   --brand:#e32727;--brand-ink:#fff;--brand-soft:rgba(227,39,39,.10);
   --navy:#0f141c;--good:#0b7d45;--good-soft:rgba(11,125,69,.12);--bad:#b42318;--warn-bg:#fff3cf;--warn-line:#e8c766;--warn-ink:#5a4300;
@@ -108,9 +109,8 @@ button.icon{padding:0;min-width:44px}
 /* ---- branches ---- */
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .toolbar .search{flex:1;min-width:160px}
-.tscroll{overflow-x:auto}
 .btable{width:100%;border-collapse:collapse}
-.btable thead th{position:sticky;top:63px;background:var(--surface);z-index:5;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);text-align:right;padding:10px 8px;border-bottom:2px solid var(--line)}
+.btable thead th{position:sticky;top:var(--bar);background:var(--surface);z-index:5;font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);text-align:right;padding:10px 8px;border-bottom:2px solid var(--line)}
 .btable th:first-child,.btable td:first-child{text-align:left}
 .btable td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
 .btable td.name{font-weight:700}
@@ -123,7 +123,7 @@ button.icon{padding:0;min-width:44px}
 .empty{padding:28px;text-align:center;color:var(--mute)}
 
 /* phones: each branch becomes a card: name + status, revenue as the headline, then the other numbers */
-@media(max-width:820px){
+@media(max-width:1180px){
   .btable,.btable tbody{display:block}.btable thead{display:none}
   .btable tr{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px 8px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow)}
   .btable tr.missing{background:var(--warn-bg);border-color:var(--warn-line)}
@@ -136,8 +136,14 @@ button.icon{padding:0;min-width:44px}
   .btable tr.missing td.nd{display:none}
   .btable td.act{grid-column:1/-1;order:3;padding-top:10px;border-top:1px solid var(--line);margin-top:2px}
   .acts{justify-content:flex-start}.acts button{flex:1;min-height:44px}
+  .listcard{padding:14px}
+}
+@media(min-width:681px) and (max-width:1180px){
+  .btable tbody{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .btable tr{margin-bottom:0}
+}
+@media(max-width:820px){
   .page{padding:12px 12px 96px}
-  .tscroll{overflow:visible}
   .listcard{padding:0!important;background:none;border:0;box-shadow:none}
   .datepick{min-width:110px}
   .datepick .label{font-size:1rem;padding:4px 6px}
