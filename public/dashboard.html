@@ -39,6 +39,7 @@
     </div>
     <div class="progress-row"><b id="progText">…</b><span class="mute small" id="progSub"></span></div>
     <div class="progress"><i id="progBar" style="width:0"></i></div>
+    <button id="shareBtn" style="width:100%;margin-top:14px;min-height:50px">Share report · images &amp; GroupMe text</button>
   </div>
 
   <div id="note" class="banner" hidden></div>
@@ -58,7 +59,6 @@
     <div class="toolbar">
       <input class="search" id="q" type="search" placeholder="Search branches" aria-label="Search branches">
       <div class="seg" id="filter" style="min-width:250px"><button class="on" data-f="all">All</button><button data-f="missing">Missing</button><button data-f="in">Submitted</button></div>
-      <button class="ghost" id="copy">Copy GroupMe post</button>
     </div>
     <table class="btable" id="tbl"></table>
   </div>
@@ -91,9 +91,27 @@
   <div id="editMsg" role="alert"></div>
   <div class="actions"><button type="button" class="ghost" id="cancelEdit">Cancel</button><button type="submit" id="saveEdit">Save</button></div>
 </form></dialog>
+<dialog id="shareDlg" class="wide"><div class="sheet">
+  <div class="sheet-head"><div><h2>Share report</h2><p class="mute small" id="shareSub" style="margin:2px 0 0"></p></div><button class="ghost sm" id="shareClose" type="button">Close</button></div>
+  <div id="shareWarn" class="banner" hidden style="margin:12px 0 0"></div>
+  <div class="seg" id="shareSeg" style="margin:14px 0"><button class="on" data-p="img" type="button">Images</button><button data-p="txt" type="button">GroupMe text</button></div>
+  <div id="paneImg">
+    <p class="mute small" id="imgHelp" style="margin:0 0 12px"></p>
+    <div id="imgBusy" class="empty">Creating images…</div>
+    <div id="imgGrid" class="imggrid" hidden></div>
+    <div class="actions" id="imgActions" hidden><button id="shareAll" type="button">Share all 3</button><button class="ghost" id="dlAll" type="button">Download all 3</button></div>
+  </div>
+  <div id="paneTxt" hidden>
+    <pre id="txtBox" class="txtbox"></pre>
+    <div class="actions"><button id="copyTxt" type="button">Copy text</button><button class="ghost" id="dlTxt" type="button">Download .txt</button></div>
+  </div>
+</div></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
 
-<script>
+<script type="module">
+import { reportToData } from '/lib/report-data.js';
+import { groupmeText } from '/lib/report-text.js';
+import { renderImages } from '/lib/render-browser.js';
 const $ = (id) => document.getElementById(id);
 const M = [['knock','Knock'],['talk','Talk'],['walk','Walk'],['contingency','Contingency'],['approved','Approved'],['contracts','Contracts'],['revenue','Revenue'],['soft_sets','Soft Sets']];
 let pw = ''; try { pw = sessionStorage.getItem('pw') || ''; } catch {}
@@ -215,12 +233,68 @@ document.addEventListener('click', async (e) => {
   try { await call('DELETE', '/api/admin/submissions/' + rep.date + '/' + r.branchId); toast('Deleted — ' + r.branch.trim() + ' can resubmit'); load(); } catch (err) { toast(err.message, true); }
 });
 
-$('copy').onclick = async () => {
+// ---- share dialog: images (made in the browser) + the exact GroupMe text
+let shareToken = 0, shareUrls = [], shareFiles = [], shareText = '';
+const canShareFiles = (files) => !!(navigator.canShare && files.length && navigator.canShare({ files }));
+const LABELS = { summary: 'Summary', 'branches-1': 'Branches 1 of 2', 'branches-2': 'Branches 2 of 2' };
+
+function saveBlob(blob, filename) {
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+}
+async function shareFiles_(files) {
+  try { await navigator.share({ files, title: 'Company Numbers ' + groupmeText(reportToData(rep)).split('\n')[2] }); }
+  catch (e) { if (e.name !== 'AbortError') toast("Couldn't open the share sheet — use Download instead", true); }
+}
+function pane(which) {
+  $('shareSeg').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.p === which));
+  $('paneImg').hidden = which !== 'img'; $('paneTxt').hidden = which !== 'txt';
+}
+$('shareSeg').addEventListener('click', (e) => { const b = e.target.closest('button'); if (b) pane(b.dataset.p); });
+
+async function openShare() {
+  if (!rep) return;
+  const token = ++shareToken;
+  const data = reportToData(rep);
+  shareText = groupmeText(data);
+  shareUrls.forEach((u) => URL.revokeObjectURL(u)); shareUrls = []; shareFiles = [];
+  $('shareSub').textContent = shortDate(rep.date) + ', ' + rep.date.slice(0, 4);
+  $('shareWarn').hidden = !rep.missing.length;
+  $('shareWarn').textContent = rep.missing.length ? rep.missing.length + ' branch' + (rep.missing.length === 1 ? '' : 'es') + " haven't submitted yet (" + rep.missing.map((x) => x.trim()).join(', ') + '). They show as zeros.' : '';
+  $('txtBox').textContent = shareText;
+  $('imgHelp').textContent = 'Post them in this order: summary first, then the two branch lists.';
+  $('imgBusy').hidden = false; $('imgBusy').textContent = 'Creating images…'; $('imgGrid').hidden = true; $('imgActions').hidden = true;
+  pane('img'); $('shareDlg').showModal();
   try {
-    const { text } = await call('GET', '/api/admin/groupme?date=' + $('rdate').value);
-    try { await navigator.clipboard.writeText(text); toast('GroupMe post copied'); } catch { prompt('Copy this:', text); }
-  } catch (e) { toast(e.message, true); }
+    const imgs = await renderImages(data);
+    if (token !== shareToken) return;
+    shareFiles = imgs.map((i) => new File([i.png], i.name + '-' + rep.date + '.png', { type: 'image/png' }));
+    shareUrls = shareFiles.map((f) => URL.createObjectURL(f));
+    const share = canShareFiles(shareFiles);
+    $('imgGrid').innerHTML = imgs.map((i, k) => '<figure><a href="' + shareUrls[k] + '" target="_blank" rel="noopener"><img src="' + shareUrls[k] + '" alt="' + LABELS[i.name] + '"></a><figcaption>' + LABELS[i.name] + '</figcaption>' +
+      '<div class="figbtns"><button class="ghost sm" data-save="' + k + '" type="button">Save</button>' + (share ? '<button class="ghost sm" data-share="' + k + '" type="button">Share</button>' : '') + '</div></figure>').join('');
+    $('imgHelp').textContent = (share ? 'Tap "Share all 3" and choose GroupMe, or save them. ' : 'Save them, or press and hold an image to save it. ') + 'Post in this order: summary, then the two branch lists.';
+    $('shareAll').hidden = !share;
+    $('imgBusy').hidden = true; $('imgGrid').hidden = false; $('imgActions').hidden = false;
+  } catch (e) {
+    if (token === shareToken) $('imgBusy').textContent = "Couldn't create the images: " + e.message + ' — the GroupMe text tab still works.';
+  }
+}
+$('shareBtn').onclick = openShare;
+$('shareClose').onclick = () => $('shareDlg').close();
+$('shareDlg').addEventListener('close', () => { shareToken++; shareUrls.forEach((u) => URL.revokeObjectURL(u)); shareUrls = []; });
+$('imgGrid').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.save) saveBlob(shareFiles[+b.dataset.save], shareFiles[+b.dataset.save].name);
+  if (b.dataset.share) shareFiles_([shareFiles[+b.dataset.share]]);
+});
+$('shareAll').onclick = () => shareFiles_(shareFiles);
+$('dlAll').onclick = () => shareFiles.forEach((f, i) => setTimeout(() => saveBlob(f, f.name), i * 400));
+$('copyTxt').onclick = async () => {
+  try { await navigator.clipboard.writeText(shareText); toast('GroupMe text copied'); }
+  catch { const r = document.createRange(); r.selectNodeContents($('txtBox')); getSelection().removeAllRanges(); getSelection().addRange(r); toast('Selected — press copy'); }
 };
+$('dlTxt').onclick = () => saveBlob(new Blob([shareText], { type: 'text/plain' }), 'company-numbers-' + rep.date + '.txt');
 
 // ---- edit dialog
 function edit(id) {

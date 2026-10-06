@@ -1,8 +1,8 @@
 // SVG -> PNG for the report images (Node only; uses native resvg).
 import { readFileSync } from 'node:fs';
 import { Resvg } from '@resvg/resvg-js';
-import { reportSvg } from '../functions/_lib/report-svg.js';
-import { reportSvgsMobile } from '../functions/_lib/report-mobile-svg.js';
+import { reportSvg } from '../public/lib/report-svg.js';
+import { reportSvgsMobile } from '../public/lib/report-mobile-svg.js';
 
 const logoDataUri = 'data:image/png;base64,' + readFileSync(new URL('../assets/logo.png', import.meta.url)).toString('base64');
 const fontFiles = ['Medium', 'SemiBold', 'Bold'].map((w) => new URL(`../assets/fonts/BarlowCondensed-${w}.ttf`, import.meta.url).pathname);

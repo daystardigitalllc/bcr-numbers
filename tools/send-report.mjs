@@ -16,8 +16,8 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 import { renderMobileSet } from './render.mjs';
-import { groupmeText } from '../functions/_lib/report-text.js';
-import { reportToData } from '../functions/_lib/report-data.js';
+import { groupmeText } from '../public/lib/report-text.js';
+import { reportToData } from '../public/lib/report-data.js';
 
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 

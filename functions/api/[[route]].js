@@ -4,8 +4,6 @@
 // Bindings / secrets (Pages project -> Settings):
 //   DB (D1 binding), ADMIN_PASSWORD (secret, required), GM_CODE (secret, optional), TZ_NAME (optional)
 import { createService, HttpError } from '../_lib/service.js';
-import { groupmeText } from '../_lib/report-text.js';
-import { reportToData } from '../_lib/report-data.js';
 
 const json = (data, status = 200) => Response.json(data, { status, headers: { 'cache-control': 'no-store' } });
 
@@ -58,8 +56,6 @@ async function handle({ request, env }) {
   const id = p.split('/').pop();
   if (m === 'POST' && p === '/api/admin/check') return json({ ok: true });
   if (m === 'GET' && p === '/api/admin/report') return json(await svc.report(url.searchParams.get('date') || svc.today(tz)));
-  if (m === 'GET' && p === '/api/admin/groupme') // the exact GroupMe post for a date, same text the nightly email carries
-    return json({ text: groupmeText(reportToData(await svc.report(url.searchParams.get('date') || svc.today(tz)))) });
   if (m === 'POST' && p === '/api/admin/submit') {
     const b = await readJson(request);
     return json({ ok: true, ...(await svc.submit({ branchId: Number(b.branchId), date: b.date, metrics: b, source: 'accounting', replace: true })) });

@@ -7,7 +7,7 @@ the daily total, MTD and tracking figures calculated automatically (what the spr
   (server-side, in `TZ_NAME`), and each branch can submit **once per day**; a repeat gets an "already submitted" error.
 - `/dashboard` — accounting view: per-branch table, who hasn't reported, Daily Total, Old/New MTD,
   Tracking Daily, Tracking For Month, a "Not yet submitted" list for the day, Edit / Enter / Delete on any branch
-  (delete lets the branch resubmit; every change is kept in `submission_log`), copy GroupMe-style recap, Setup tab
+  (delete lets the branch resubmit; every change is kept in `submission_log`), a **Share report** button (see below), Setup tab
 
 Built for **Cloudflare Pages + D1**, same layout as the mirewood site: static files in `public/`, API as a
 Pages Function in `functions/api/`, no build step, no runtime dependencies.
@@ -16,6 +16,10 @@ Pages Function in `functions/api/`, no build step, no runtime dependencies.
 public/            static pages (Pages "build output directory")
 functions/api/     [[route]].js  -> every /api/* endpoint
 functions/_lib/    calc.js (rollup math), service.js (D1 queries)
+public/lib/        report-svg / report-mobile-svg (image layouts), report-text (GroupMe text), report-data,
+                   render-browser.js (makes the PNGs in the browser via WebAssembly) -- shared by the
+                   dashboard and the nightly email script
+public/vendor/     resvg.mjs + resvg.wasm (image renderer)   public/fonts/  Barlow Condensed
 schema.sql         D1 tables + seed (55 branches, October 2026 carry-in)
 test/              npm test  (runs the real schema.sql + queries against SQLite)
 ```
@@ -46,6 +50,16 @@ test/              npm test  (runs the real schema.sql + queries against SQLite)
 
 Every push to the connected branch redeploys automatically. Backups: D1 has built-in Time Travel
 (`npx wrangler d1 time-travel info bcr-numbers`).
+
+## Getting the images and text without email
+
+On the dashboard, pick the date and tap **Share report**. A pop-up has two tabs:
+
+- **Images:** the three phone-friendly PNGs (summary, branches 1 of 2, branches 2 of 2), made in your browser in about a second.
+  *Save* / *Download all 3*, or on a phone *Share all 3* opens the share sheet so you can send them straight to GroupMe.
+- **GroupMe text:** the exact post in your current format, with *Copy text* and *Download .txt*.
+
+It uses whatever is in the database for that date right now, so re-open it after edits. Nothing is sent anywhere.
 
 ## Nightly email (images + GroupMe text)
 

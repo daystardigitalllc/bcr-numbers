@@ -172,6 +172,19 @@ dialog h2{font-size:1.15rem;margin-bottom:2px}
 dialog .actions{display:flex;gap:10px;margin-top:16px}dialog .actions button{flex:1;min-height:50px}
 @media(max-width:560px){dialog{width:100%;max-width:none;margin:auto 0 0;border-radius:18px 18px 0 0;max-height:94vh;overflow:auto}}
 
+/* ---- share dialog ---- */
+dialog.wide{max-width:760px}
+.sheet{padding:18px;max-height:92vh;overflow:auto}
+.sheet-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.imggrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.imggrid figure{margin:0;text-align:center}
+.imggrid img{width:100%;height:auto;border-radius:8px;border:1px solid var(--line);display:block;background:#0f141c}
+.imggrid figcaption{font-weight:700;font-size:.85rem;margin:8px 0 6px}
+.figbtns{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.sheet .actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}.sheet .actions button{flex:1;min-width:140px;min-height:50px}
+.txtbox{white-space:pre-wrap;word-break:break-word;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:14px;font:13px/1.45 ui-monospace,Menlo,Consolas,monospace;margin:0;max-height:52vh;overflow:auto;user-select:all}
+@media(max-width:560px){dialog.wide{max-height:96vh}.sheet{padding:14px;max-height:96vh}}
+
 /* ---- setup lists ---- */
 .rowitem{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
 .rowitem:last-child{border-bottom:0}.rowitem .grow{flex:1;min-width:0}
