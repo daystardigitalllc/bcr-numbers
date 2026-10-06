@@ -9,24 +9,24 @@ const CENTER_W = 460;
 const SIDE_W = (W - 2 * M - 2 * GAP - CENTER_W) / 2;
 const ROW_H = 38;
 const FONT = 25;         // branch name / number size
-const COLORS = {
+export const COLORS = {
   bg: '#0f141c', panel: '#171e29', line: '#263142', red: '#e32727',
   text: '#f2f5f9', mute: '#8793a6', dim: '#4a566a', good: '#4ade80',
 };
 
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
-const num = (n) => Math.round(n).toLocaleString('en-US');
-const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
-const moneyCents = (n) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+export const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[c]));
+export const num = (n) => Math.round(n).toLocaleString('en-US');
+export const money = (n) => '$' + Math.round(n).toLocaleString('en-US');
+export const moneyCents = (n) => '$' + n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-function prettyDate(iso) {
+export function prettyDate(iso) {
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(Date.UTC(y, m - 1, d)).toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC',
   }).toUpperCase();
 }
 
-const text = (x, y, s, { size = 18, weight = 500, fill = COLORS.text, anchor = 'start', spacing = 0 } = {}) =>
+export const text = (x, y, s, { size = 18, weight = 500, fill = COLORS.text, anchor = 'start', spacing = 0 } = {}) =>
   `<text x="${x}" y="${y}" font-family="Barlow Condensed" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}"${spacing ? ` letter-spacing="${spacing}"` : ''}>${esc(s)}</text>`;
 
 // ---- branch column -------------------------------------------------------------------------
