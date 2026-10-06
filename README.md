@@ -40,7 +40,7 @@ test/              npm test  (runs the real schema.sql + queries against SQLite)
    |---|---|---|
    | `ADMIN_PASSWORD` | Secret, **required** | accounting dashboard password |
    | `GM_CODE` | Secret, optional | shared code GMs enter on the form |
-   | `TZ_NAME` | Text, optional | timezone for "today" (default `America/New_York`) |
+   | `TZ_NAME` | Text, optional | timezone for "today" (default `America/Chicago`) |
 
 5. Redeploy once (Deployments → Retry) so the binding and secrets take effect. Optionally add a custom domain.
 
