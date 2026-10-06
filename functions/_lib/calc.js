@@ -89,4 +89,4 @@ function buildRollup({ date, dayTotal, priorSubs, baseline, holidays }) {
   return { oldMtd, newMtd, daysWorked: worked, totalDays: total, trackingDaily: t.daily, trackingMonth: t.month, note };
 }
 
-module.exports = { METRICS, zero, add, sub, isValidDate, isWorkday, workdayCounts, tracking, buildRollup };
+export { METRICS, zero, add, sub, isValidDate, isWorkday, workdayCounts, tracking, buildRollup };

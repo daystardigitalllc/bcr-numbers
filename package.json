@@ -1,12 +1,10 @@
 {
   "name": "bcr-numbers",
-  "version": "1.0.0",
-  "description": "Nightly branch numbers form + accounting dashboard (replaces GroupMe reports)",
+  "version": "2.0.0",
+  "description": "Nightly branch numbers form + accounting dashboard (Cloudflare Pages + D1)",
   "private": true,
-  "type": "commonjs",
-  "engines": { "node": ">=22.13" },
+  "type": "module",
   "scripts": {
-    "start": "node server.js",
     "test": "node --test test/*.test.js"
   }
 }
