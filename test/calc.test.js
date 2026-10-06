@@ -75,3 +75,21 @@ test('a new month with no carry-in starts from zero', async () => {
   assert.equal(r.oldMtd.revenue, 0);
   assert.equal(r.daysWorked, 1); // Nov 1 is a Sunday, so Nov 2 is day 1
 });
+
+test('real 10/05/26 GroupMe post: carry-in + that day reproduces the pasted Daily Total and MTD', async () => {
+  const { readFileSync } = await import('node:fs');
+  const sample = JSON.parse(readFileSync(new URL('../sample/2026-10-05.json', import.meta.url), 'utf8'));
+  const { svc, id } = await setup();
+  // The post only lists contingency..soft sets per branch; knock/talk/walk exist only in its totals, so park them on one branch.
+  for (const [i, b] of sample.branches.entries()) {
+    const extra = i === 0 ? { knock: sample.daily.knock, talk: sample.daily.talk, walk: sample.daily.walk } : {};
+    await svc.submit({ branchId: id(b.name), date: sample.date, metrics: { ...b, ...extra } });
+  }
+  const r = await svc.report(sample.date);
+  assert.deepEqual(r.dayTotal, sample.daily);
+  assert.deepEqual(r.newMtd, sample.mtd);
+  assert.equal(r.daysWorked, 4);
+  assert.equal(r.totalDays, 27);
+  assert.equal(Math.round(r.trackingMonth.revenue), sample.tracking);
+  assert.equal(r.missing.length, 0);
+});

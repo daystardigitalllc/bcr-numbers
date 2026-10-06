@@ -7,8 +7,8 @@ import { COLORS, num, money, moneyCents, prettyDate, text } from './report-svg.j
 const W = 1080;
 const M = 30;
 const CW = W - 2 * M;
-const ROW_H = 60;
-const FONT = 36;
+const ROW_H = 64;
+const FONT = 40;
 const ZERO = '#5c6a80';
 const LOGO_RATIO = 847 / 511;
 
@@ -50,9 +50,10 @@ function totalsCard(y, title, t) {
   const r2 = y + 550;
   [['KNOCK', t.knock], ['TALK', t.talk], ['WALK', t.walk], ['CONTINGENCY', t.contingency]]
     .forEach(([l, v], i) => { out += tile(cx(i), r1, l, num(v)); });
-  [['APPROVED', t.approved], ['CONTRACTS', t.contracts], ['SOFT SETS', t.soft_sets]]
-    .forEach(([l, v], i) => { out += tile(cx(i), r2, l, num(v)); });
-  if (t.completed) out += tile(cx(3), r2, 'COMPLETED', num(t.completed.count), moneyCents(t.completed.amount));
+  const row2 = [['APPROVED', num(t.approved)], ['CONTRACTS', num(t.contracts)], ['SOFT SETS', num(t.soft_sets)]];
+  if (t.completed) row2.push(['COMPLETED', num(t.completed.count), moneyCents(t.completed.amount)]);
+  const tw2 = (CW - 40) / row2.length;
+  row2.forEach(([l, v, sub], i) => { out += tile(M + 20 + tw2 * (i + 0.5), r2, l, v, sub); });
   return { svg: out, h };
 }
 
@@ -95,13 +96,12 @@ function summaryImage(d, logoDataUri) {
 }
 
 // ---- roster images ---------------------------------------------------------------------------
-const COLS = [
-  { key: 'contingency', label: 'CONT', right: 478, fmt: num },
-  { key: 'approved', label: 'APPR', right: 556, fmt: num },
-  { key: 'contracts', label: 'CNTR', right: 634, fmt: num },
-  { key: 'revenue', label: 'REVENUE', right: 812, fmt: money },
-  { key: 'soft_sets', label: 'SOFT', right: 906, fmt: num },
-  { key: 'knock', label: 'KNOCK', right: 1034, fmt: num },
+const COLS = [ // right edge offset from the table's left edge
+  { key: 'contingency', label: 'CONT', right: 520, fmt: num },
+  { key: 'approved', label: 'APPR', right: 640, fmt: num },
+  { key: 'contracts', label: 'CNTR', right: 760, fmt: num },
+  { key: 'revenue', label: 'REVENUE', right: 925, fmt: money },
+  { key: 'soft_sets', label: 'SOFT', right: 1004, fmt: num },
 ];
 
 const initial = (b) => b.name[0].toUpperCase();
@@ -115,17 +115,17 @@ function rosterImage(d, rows, part, parts, logoDataUri) {
   body += text(W - M - 10, 124, `BRANCHES ${initial(rows[0])}–${initial(rows[rows.length - 1])}  (${part} OF ${parts})`, { size: 30, weight: 600, fill: COLORS.mute, anchor: 'end', spacing: 3 });
   body += `<rect x="${M}" y="${tableY}" width="${CW}" height="${tableH}" rx="16" fill="${COLORS.panel}"/>`;
   const hy = tableY + 42;
-  body += text(M + 20, hy, 'BRANCH', { size: 26, weight: 600, fill: COLORS.mute, spacing: 2 });
-  for (const c of COLS) body += text(M + c.right - 30, hy, c.label, { size: 26, weight: 600, fill: COLORS.mute, anchor: 'end', spacing: 1 });
+  body += text(M + 20, hy, 'BRANCH', { size: 28, weight: 600, fill: COLORS.mute, spacing: 2 });
+  for (const c of COLS) body += text(M + c.right, hy, c.label, { size: 28, weight: 600, fill: COLORS.mute, anchor: 'end', spacing: 1 });
   body += `<rect x="${M + 14}" y="${tableY + ROW_H - 2}" width="${CW - 28}" height="2" fill="${COLORS.line}"/>`;
   rows.forEach((b, i) => {
     const y = tableY + ROW_H + 6 + i * ROW_H;
     const active = b.contracts > 0 || b.revenue > 0;
     if (i % 2 === 1) body += `<rect x="${M + 8}" y="${y - 4}" width="${CW - 16}" height="${ROW_H}" rx="6" fill="#ffffff" fill-opacity="0.035"/>`;
-    body += text(M + 20, y + 40, b.name, { size: FONT, weight: active ? 700 : 500, fill: active ? COLORS.text : '#c9d1dc' });
+    body += text(M + 20, y + 42, b.name, { size: FONT, weight: active ? 700 : 500, fill: active ? COLORS.text : '#c9d1dc' });
     for (const c of COLS) {
       const v = b[c.key];
-      body += text(M + c.right - 30, y + 40, c.fmt(v), {
+      body += text(M + c.right, y + 42, c.fmt(v), {
         size: FONT, anchor: 'end', weight: v > 0 ? 700 : 500,
         fill: c.key === 'revenue' && v > 0 ? COLORS.good : v > 0 ? COLORS.text : ZERO,
       });

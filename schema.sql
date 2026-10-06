@@ -93,7 +93,7 @@ INSERT OR IGNORE INTO branches (name, sort) VALUES
   ('Thomasville', 53),
   ('Columbus GA', 54);
 
--- MTD as of the spreadsheet's last update (row 63, 10/03/26). Knock (B63) was a formula that
--- evaluated to 0 in the file, so it starts at 0 and can be corrected on the dashboard Setup tab.
+-- MTD as of the spreadsheet's last update (row 63, 10/03/26). Knock (B63) was a formula that evaluated
+-- to 0 in the file; 13675 is derived from the 10/05/26 GroupMe post (MTD 17,084 minus that day's 3,409).
 INSERT OR IGNORE INTO baselines (month, through_date, knock, talk, walk, contingency, approved, contracts, revenue, soft_sets)
-VALUES ('2026-10', '2026-10-03', 0, 4495, 504, 213, 31, 100, 1496511.86, 396);
+VALUES ('2026-10', '2026-10-03', 13675, 4495, 504, 213, 31, 100, 1496511.86, 396);

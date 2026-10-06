@@ -31,12 +31,11 @@ export const text = (x, y, s, { size = 18, weight = 500, fill = COLORS.text, anc
 
 // ---- branch column -------------------------------------------------------------------------
 const COLS = [ // right edge offset from column left, header label, formatter
-  { key: 'contingency', label: 'CONT', right: 280, fmt: num },
-  { key: 'approved', label: 'APPR', right: 330, fmt: num },
-  { key: 'contracts', label: 'CNTR', right: 380, fmt: num },
-  { key: 'revenue', label: 'REVENUE', right: 482, fmt: money },
-  { key: 'soft_sets', label: 'SOFT', right: 540, fmt: num },
-  { key: 'knock', label: 'KNOCK', right: 610, fmt: num },
+  { key: 'contingency', label: 'CONT', right: 296, fmt: num },
+  { key: 'approved', label: 'APPR', right: 372, fmt: num },
+  { key: 'contracts', label: 'CNTR', right: 448, fmt: num },
+  { key: 'revenue', label: 'REVENUE', right: 556, fmt: money },
+  { key: 'soft_sets', label: 'SOFT', right: 610, fmt: num },
 ];
 
 function branchColumn(x0, y0, branches, rows) {
@@ -93,9 +92,10 @@ function totalsCard(x, y, h, title, t) {
   const r2 = y + h * 0.76;
   [['KNOCK', t.knock], ['TALK', t.talk], ['WALK', t.walk], ['CONTINGENCY', t.contingency]]
     .forEach(([l, v], i) => { out += tile(cx(i), r1, l, num(v)); });
-  [['APPROVED', t.approved], ['CONTRACTS', t.contracts], ['SOFT SETS', t.soft_sets]]
-    .forEach(([l, v], i) => { out += tile(cx(i), r2, l, num(v)); });
-  if (t.completed) out += tile(cx(3), r2, 'COMPLETED', num(t.completed.count), moneyCents(t.completed.amount));
+  const row2 = [['APPROVED', num(t.approved)], ['CONTRACTS', num(t.contracts)], ['SOFT SETS', num(t.soft_sets)]];
+  if (t.completed) row2.push(['COMPLETED', num(t.completed.count), moneyCents(t.completed.amount)]);
+  const tw2 = (CENTER_W - 40) / row2.length;
+  row2.forEach(([l, v, sub], i) => { out += tile(x + 20 + tw2 * (i + 0.5), r2, l, v, sub); });
   return out;
 }
 

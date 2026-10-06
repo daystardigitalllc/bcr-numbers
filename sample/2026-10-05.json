@@ -1,0 +1,468 @@
+{
+ "date": "2026-10-05",
+ "daysWorked": 4,
+ "totalDays": 27,
+ "branches": [
+  {
+   "name": "Hendersonville",
+   "contingency": 3,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 1
+  },
+  {
+   "name": "Memphis",
+   "contingency": 1,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 10
+  },
+  {
+   "name": "Winston Salem",
+   "contingency": 1,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Bowling Green",
+   "contingency": 4,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 1
+  },
+  {
+   "name": "Jacksonville",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Clarksville",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 1,
+   "revenue": 50160.97,
+   "soft_sets": 1
+  },
+  {
+   "name": "Chesapeake",
+   "contingency": 1,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Richmond",
+   "contingency": 1,
+   "approved": 0,
+   "contracts": 4,
+   "revenue": 61327.71,
+   "soft_sets": 2
+  },
+  {
+   "name": "Birmingham",
+   "contingency": 1,
+   "approved": 2,
+   "contracts": 2,
+   "revenue": 32796.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Columbia",
+   "contingency": 1,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 1
+  },
+  {
+   "name": "Roanoke",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 4
+  },
+  {
+   "name": "Evansville",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 3
+  },
+  {
+   "name": "Hickory NC",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 1
+  },
+  {
+   "name": "Augusta",
+   "contingency": 2,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 2
+  },
+  {
+   "name": "Rockhill",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 1
+  },
+  {
+   "name": "Greenville NC",
+   "contingency": 1,
+   "approved": 2,
+   "contracts": 4,
+   "revenue": 41552.06,
+   "soft_sets": 1
+  },
+  {
+   "name": "Jackson MS",
+   "contingency": 2,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Gainesville",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 1
+  },
+  {
+   "name": "Asheville",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 2,
+   "revenue": 27156.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Vegas",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Savannah",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 2,
+   "revenue": 36085.0,
+   "soft_sets": 5
+  },
+  {
+   "name": "Marietta",
+   "contingency": 2,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 1
+  },
+  {
+   "name": "South Florida",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Hattiesburg",
+   "contingency": 5,
+   "approved": 1,
+   "contracts": 1,
+   "revenue": 17933.19,
+   "soft_sets": 1
+  },
+  {
+   "name": "Wilmington",
+   "contingency": 1,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Louisville",
+   "contingency": 2,
+   "approved": 1,
+   "contracts": 1,
+   "revenue": 16000.0,
+   "soft_sets": 2
+  },
+  {
+   "name": "Knoxville",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Huntsville",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Lexington",
+   "contingency": 0,
+   "approved": 2,
+   "contracts": 2,
+   "revenue": 13793.01,
+   "soft_sets": 0
+  },
+  {
+   "name": "Tupelo",
+   "contingency": 4,
+   "approved": 1,
+   "contracts": 1,
+   "revenue": 69735.73,
+   "soft_sets": 9
+  },
+  {
+   "name": "Cookeville",
+   "contingency": 1,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 1
+  },
+  {
+   "name": "Athens",
+   "contingency": 2,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 2
+  },
+  {
+   "name": "Chattanooga",
+   "contingency": 4,
+   "approved": 0,
+   "contracts": 1,
+   "revenue": 20915.6,
+   "soft_sets": 0
+  },
+  {
+   "name": "Dayton",
+   "contingency": 0,
+   "approved": 1,
+   "contracts": 1,
+   "revenue": 19500.0,
+   "soft_sets": 1
+  },
+  {
+   "name": "Charleston",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 5
+  },
+  {
+   "name": "Montgomery",
+   "contingency": 2,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 1
+  },
+  {
+   "name": "Fayetteville",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 1,
+   "revenue": 40408.0,
+   "soft_sets": 1
+  },
+  {
+   "name": "Tallahassee",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Murfreeboro",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Tri-Cities",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 2,
+   "revenue": 18903.37,
+   "soft_sets": 0
+  },
+  {
+   "name": "Dothan",
+   "contingency": 1,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 6
+  },
+  {
+   "name": "Shreveport",
+   "contingency": 2,
+   "approved": 0,
+   "contracts": 1,
+   "revenue": 8930.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Covington KY",
+   "contingency": 1,
+   "approved": 0,
+   "contracts": 2,
+   "revenue": 19761.56,
+   "soft_sets": 4
+  },
+  {
+   "name": "Fredericksburg",
+   "contingency": 1,
+   "approved": 0,
+   "contracts": 1,
+   "revenue": 13245.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Monroe",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Somerset",
+   "contingency": 1,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Indianapolis",
+   "contingency": 1,
+   "approved": 0,
+   "contracts": 1,
+   "revenue": 15148.27,
+   "soft_sets": 1
+  },
+  {
+   "name": "Baton Rouge",
+   "contingency": 1,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 0
+  },
+  {
+   "name": "Lafayette",
+   "contingency": 2,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 2
+  },
+  {
+   "name": "Paducah",
+   "contingency": 3,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 3
+  },
+  {
+   "name": "Jackson TN",
+   "contingency": 1,
+   "approved": 2,
+   "contracts": 3,
+   "revenue": 65814.44,
+   "soft_sets": 0
+  },
+  {
+   "name": "Valdosta",
+   "contingency": 1,
+   "approved": 1,
+   "contracts": 1,
+   "revenue": 16380.0,
+   "soft_sets": 4
+  },
+  {
+   "name": "Waycross",
+   "contingency": 2,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 3
+  },
+  {
+   "name": "Thomasville",
+   "contingency": 0,
+   "approved": 0,
+   "contracts": 0,
+   "revenue": 0.0,
+   "soft_sets": 5
+  },
+  {
+   "name": "Columbus GA",
+   "contingency": 1,
+   "approved": 0,
+   "contracts": 1,
+   "revenue": 21500.0,
+   "soft_sets": 1
+  }
+ ],
+ "daily": {
+  "knock": 3409,
+  "talk": 1065,
+  "walk": 119,
+  "contingency": 59,
+  "approved": 13,
+  "contracts": 35,
+  "revenue": 627045.91,
+  "soft_sets": 87
+ },
+ "mtd": {
+  "knock": 17084,
+  "talk": 5560,
+  "walk": 623,
+  "contingency": 272,
+  "approved": 44,
+  "contracts": 135,
+  "revenue": 2123557.77,
+  "soft_sets": 483
+ },
+ "tracking": 14334015
+}
