@@ -2,12 +2,13 @@
 // Layout: logo + centered date on top; branch columns left and right; Daily / MTD / Tracking in the middle.
 // Fonts used: "Barlow Condensed" (500/600/700) -- the renderer must be given those font files.
 
-const W = 1600;
-const M = 40;            // outer margin
-const GAP = 30;
-const CENTER_W = 480;
+const W = 1800;
+const M = 30;            // outer margin
+const GAP = 24;
+const CENTER_W = 460;
 const SIDE_W = (W - 2 * M - 2 * GAP - CENTER_W) / 2;
-const ROW_H = 28;
+const ROW_H = 38;
+const FONT = 25;         // branch name / number size
 const COLORS = {
   bg: '#0f141c', panel: '#171e29', line: '#263142', red: '#e32727',
   text: '#f2f5f9', mute: '#8793a6', dim: '#4a566a', good: '#4ade80',
@@ -29,77 +30,80 @@ const text = (x, y, s, { size = 18, weight = 500, fill = COLORS.text, anchor = '
   `<text x="${x}" y="${y}" font-family="Barlow Condensed" font-size="${size}" font-weight="${weight}" fill="${fill}" text-anchor="${anchor}"${spacing ? ` letter-spacing="${spacing}"` : ''}>${esc(s)}</text>`;
 
 // ---- branch column -------------------------------------------------------------------------
-const COLS = [ // right edge offset from column left, header label, getter, formatter
-  { key: 'contingency', label: 'CONT', right: 226, fmt: num },
-  { key: 'approved', label: 'APPR', right: 270, fmt: num },
-  { key: 'contracts', label: 'CNTR', right: 314, fmt: num },
-  { key: 'revenue', label: 'REVENUE', right: 392, fmt: money },
-  { key: 'soft_sets', label: 'SOFT', right: 432, fmt: num },
-  { key: 'knock', label: 'KNOCK', right: 482, fmt: num },
+const COLS = [ // right edge offset from column left, header label, formatter
+  { key: 'contingency', label: 'CONT', right: 280, fmt: num },
+  { key: 'approved', label: 'APPR', right: 330, fmt: num },
+  { key: 'contracts', label: 'CNTR', right: 380, fmt: num },
+  { key: 'revenue', label: 'REVENUE', right: 482, fmt: money },
+  { key: 'soft_sets', label: 'SOFT', right: 540, fmt: num },
+  { key: 'knock', label: 'KNOCK', right: 610, fmt: num },
 ];
 
-function branchColumn(x0, y0, branches) {
-  let out = `<rect x="${x0}" y="${y0}" width="${SIDE_W}" height="${ROW_H * (branches.length + 1) + 8}" rx="10" fill="${COLORS.panel}"/>`;
-  out += text(x0 + 14, y0 + 21, 'BRANCH', { size: 15, weight: 600, fill: COLORS.mute, spacing: 1.5 });
-  for (const c of COLS) out += text(x0 + c.right, y0 + 21, c.label, { size: 15, weight: 600, fill: COLORS.mute, anchor: 'end', spacing: 1 });
+function branchColumn(x0, y0, branches, rows) {
+  let out = `<rect x="${x0}" y="${y0}" width="${SIDE_W}" height="${ROW_H * (rows + 1) + 8}" rx="10" fill="${COLORS.panel}"/>`;
+  const hy = y0 + 27;
+  out += text(x0 + 16, hy, 'BRANCH', { size: 18, weight: 600, fill: COLORS.mute, spacing: 1.5 });
+  for (const c of COLS) out += text(x0 + c.right, hy, c.label, { size: 18, weight: 600, fill: COLORS.mute, anchor: 'end', spacing: 1 });
   out += `<rect x="${x0 + 10}" y="${y0 + ROW_H - 1}" width="${SIDE_W - 20}" height="1.5" fill="${COLORS.line}"/>`;
   branches.forEach((b, i) => {
     const y = y0 + ROW_H + 4 + i * ROW_H;
     const active = b.contracts > 0 || b.revenue > 0;
-    if (i % 2 === 1) out += `<rect x="${x0 + 6}" y="${y - 3}" width="${SIDE_W - 12}" height="${ROW_H}" rx="4" fill="#ffffff" fill-opacity="0.025"/>`;
-    out += text(x0 + 14, y + 17, b.name, { size: 18, weight: active ? 700 : 500, fill: active ? COLORS.text : '#b9c2d0' });
+    if (i % 2 === 1) out += `<rect x="${x0 + 6}" y="${y - 3}" width="${SIDE_W - 12}" height="${ROW_H}" rx="4" fill="#ffffff" fill-opacity="0.03"/>`;
+    out += text(x0 + 16, y + 25, b.name, { size: FONT, weight: active ? 700 : 500, fill: active ? COLORS.text : '#c4ccd8' });
     for (const c of COLS) {
       const v = b[c.key];
-      const isRevenueHit = c.key === 'revenue' && v > 0;
-      out += text(x0 + c.right, y + 17, c.fmt(v), {
-        size: 18, anchor: 'end',
+      out += text(x0 + c.right, y + 25, c.fmt(v), {
+        size: FONT, anchor: 'end',
         weight: v > 0 ? 700 : 500,
-        fill: isRevenueHit ? COLORS.good : v > 0 ? COLORS.text : COLORS.dim,
+        fill: c.key === 'revenue' && v > 0 ? COLORS.good : v > 0 ? COLORS.text : COLORS.dim,
       });
     }
   });
   return out;
 }
 
-// ---- center cards --------------------------------------------------------------------------
-function tile(x, y, w, label, value) {
-  return text(x + w / 2, y, label, { size: 15, weight: 600, fill: COLORS.mute, anchor: 'middle', spacing: 1.5 }) +
-    text(x + w / 2, y + 36, value, { size: 38, weight: 700, anchor: 'middle' });
+// ---- center cards (laid out proportionally so they fill whatever height the branch columns need) ----
+const heroSize = (str) => Math.min(100, Math.floor((CENTER_W - 60) / (str.length * 0.47)));
+
+function tile(cx, y, label, value, sub) {
+  let out = text(cx, y, label, { size: 17, weight: 600, fill: COLORS.mute, anchor: 'middle', spacing: 1.5 }) +
+    text(cx, y + 44, value, { size: 41, weight: 700, anchor: 'middle' });
+  if (sub) out += text(cx, y + 76, sub, { size: 20, weight: 600, fill: COLORS.mute, anchor: 'middle' });
+  return out;
 }
 
 function card(x, y, h, title) {
   return `<rect x="${x}" y="${y}" width="${CENTER_W}" height="${h}" rx="12" fill="${COLORS.panel}"/>` +
     `<rect x="${x}" y="${y}" width="6" height="${h}" rx="3" fill="${COLORS.red}"/>` +
-    text(x + 26, y + 36, title, { size: 22, weight: 700, fill: COLORS.red, spacing: 3 });
+    text(x + 28, y + 42, title, { size: 26, weight: 700, fill: COLORS.red, spacing: 3 });
+}
+
+function hero(x, y, h, value, label, fill = COLORS.text) {
+  const size = heroSize(value);
+  const base = y + 64 + size * 0.8 + Math.max(0, (h - 330) * 0.12);
+  return text(x + CENTER_W / 2, base, value, { size, weight: 700, anchor: 'middle', fill }) +
+    text(x + CENTER_W / 2, base + 34, label, { size: 18, weight: 600, fill: COLORS.mute, anchor: 'middle', spacing: 3 });
 }
 
 function totalsCard(x, y, h, title, t) {
-  const inner = CENTER_W - 40;
-  const tw = inner / 4;
-  const tx = x + 20;
-  let out = card(x, y, h, title);
-  out += text(x + CENTER_W / 2, y + 112, money(t.revenue), { size: 76, weight: 700, anchor: 'middle' });
-  out += text(x + CENTER_W / 2, y + 138, 'REVENUE', { size: 16, weight: 600, fill: COLORS.mute, anchor: 'middle', spacing: 3 });
-  const r1 = y + 190;
-  const r2 = y + 264;
+  const tw = (CENTER_W - 40) / 4;
+  const cx = (i) => x + 20 + tw * (i + 0.5);
+  let out = card(x, y, h, title) + hero(x, y, h, money(t.revenue), 'REVENUE');
+  const r1 = y + h * 0.52;
+  const r2 = y + h * 0.76;
   [['KNOCK', t.knock], ['TALK', t.talk], ['WALK', t.walk], ['CONTINGENCY', t.contingency]]
-    .forEach(([l, v], i) => { out += tile(tx + i * tw, r1, tw, l, num(v)); });
+    .forEach(([l, v], i) => { out += tile(cx(i), r1, l, num(v)); });
   [['APPROVED', t.approved], ['CONTRACTS', t.contracts], ['SOFT SETS', t.soft_sets]]
-    .forEach(([l, v], i) => { out += tile(tx + i * tw, r2, tw, l, num(v)); });
-  if (t.completed) {
-    out += tile(tx + 3 * tw, r2, tw, 'COMPLETED', num(t.completed.count));
-    out += text(tx + 3.5 * tw, r2 + 62, moneyCents(t.completed.amount), { size: 17, weight: 600, fill: COLORS.mute, anchor: 'middle' });
-  }
+    .forEach(([l, v], i) => { out += tile(cx(i), r2, l, num(v)); });
+  if (t.completed) out += tile(cx(3), r2, 'COMPLETED', num(t.completed.count), moneyCents(t.completed.amount));
   return out;
 }
 
 function trackingCard(x, y, h, d) {
   const pace = d.mtd.revenue / d.daysWorked;
-  let out = card(x, y, h, 'TRACKING');
-  out += text(x + CENTER_W / 2, y + 112, money(d.tracking), { size: 76, weight: 700, anchor: 'middle', fill: COLORS.good });
-  out += text(x + CENTER_W / 2, y + 138, 'PROJECTED MONTH REVENUE', { size: 16, weight: 600, fill: COLORS.mute, anchor: 'middle', spacing: 3 });
-  out += tile(x + 20, y + 190, 200, 'DAYS WORKED', `${d.daysWorked} of ${d.totalDays}`);
-  out += tile(x + 260, y + 190, 200, 'DAILY PACE', money(pace));
+  let out = card(x, y, h, 'TRACKING') + hero(x, y, h, money(d.tracking), 'PROJECTED MONTH REVENUE', COLORS.good);
+  out += tile(x + CENTER_W * 0.28, y + h * 0.68, 'DAYS WORKED', `${d.daysWorked} of ${d.totalDays}`);
+  out += tile(x + CENTER_W * 0.74, y + h * 0.68, 'DAILY PACE', money(pace));
   return out;
 }
 
@@ -109,42 +113,50 @@ function franchiseCard(x, y, h, f) {
   [['CONT', f.contingency, num], ['APPR', f.approved, num], ['CNTR', f.contracts, num], ['REVENUE', f.revenue, money], ['SOFT', f.soft_sets, num], ['KNOCK', f.knock, num]]
     .forEach(([l, v, fmt], i) => {
       const cx = x + 20 + i * tw + tw / 2;
-      out += text(cx, y + 66, l, { size: 14, weight: 600, fill: COLORS.mute, anchor: 'middle', spacing: 1 });
-      out += text(cx, y + 96, fmt(v), { size: 24, weight: 700, anchor: 'middle' });
+      out += text(cx, y + 80, l, { size: 15, weight: 600, fill: COLORS.mute, anchor: 'middle', spacing: 1 });
+      out += text(cx, y + 114, fmt(v), { size: 26, weight: 700, anchor: 'middle' });
     });
   return out;
 }
 
 // ---- page ----------------------------------------------------------------------------------
+const byName = (a, b) => a.name.localeCompare(b.name, 'en', { sensitivity: 'base' });
+
 export function reportSvg(d, { logoDataUri } = {}) {
-  const half = Math.ceil(d.branches.length / 2);
-  const left = d.branches.slice(0, half);
-  const right = d.branches.slice(half);
-  const bodyY = 285;
+  // Alphabetical, reading down the left column and then continuing down the right.
+  const sorted = [...d.branches].sort(byName);
+  const half = Math.ceil(sorted.length / 2);
+  const left = sorted.slice(0, half);
+  const right = sorted.slice(half);
+  const bodyY = 205;
   const colH = ROW_H * (half + 1) + 8;
-  const H = bodyY + colH + 70;
+  const H = bodyY + colH + 64;
 
   const leftX = M;
   const centerX = M + SIDE_W + GAP;
   const rightX = centerX + CENTER_W + GAP;
 
   const hasF = !!d.franchise;
-  const fH = 130;
+  const fH = 150;
   const gap = 20;
+  const trackH = 330;
   const avail = colH - (hasF ? fH + gap : 0) - 2 * gap;
-  const trackH = 260;
   const totH = (avail - trackH) / 2;
 
   const logoH = 150;
   const logoW = logoH * (847 / 511);
   let out = `<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">`;
   out += `<rect width="${W}" height="${H}" fill="${COLORS.bg}"/>`;
-  if (logoDataUri) out += `<image href="${logoDataUri}" x="${(W - logoW) / 2}" y="22" width="${logoW}" height="${logoH}"/>`;
-  out += text(W / 2, 232, prettyDate(d.date), { size: 52, weight: 700, anchor: 'middle', spacing: 4 });
-  out += `<rect x="${W / 2 - 60}" y="246" width="120" height="5" rx="2.5" fill="${COLORS.red}"/>`;
+  if (logoDataUri) out += `<image href="${logoDataUri}" x="${M + 10}" y="25" width="${logoW}" height="${logoH}"/>`;
+  out += text(W / 2, 112, prettyDate(d.date), { size: 68, weight: 700, anchor: 'middle', spacing: 5 });
+  out += `<rect x="${W / 2 - 70}" y="134" width="140" height="6" rx="3" fill="${COLORS.red}"/>`;
+  out += text(W / 2, 176, 'DAILY NUMBERS REPORT', { size: 24, weight: 600, fill: COLORS.mute, anchor: 'middle', spacing: 6 });
+  // right side of the header balances the logo
+  out += text(W - M - 10, 88, String(d.branches.length), { size: 80, weight: 700, anchor: 'end' });
+  out += text(W - M - 10, 124, 'BRANCHES REPORTING', { size: 20, weight: 600, fill: COLORS.mute, anchor: 'end', spacing: 3 });
 
-  out += branchColumn(leftX, bodyY, left);
-  out += branchColumn(rightX, bodyY, right);
+  out += branchColumn(leftX, bodyY, left, half);
+  out += branchColumn(rightX, bodyY, right, half);
 
   let y = bodyY;
   out += totalsCard(centerX, y, totH, 'DAILY TOTALS', d.daily); y += totH + gap;
@@ -152,6 +164,6 @@ export function reportSvg(d, { logoDataUri } = {}) {
   out += trackingCard(centerX, y, trackH, d); y += trackH + gap;
   if (hasF) out += franchiseCard(centerX, y, fH, d.franchise);
 
-  out += text(W / 2, H - 28, `${d.branches.length} BRANCHES  •  WE'RE ON TOP OF EVERYTHING`, { size: 17, weight: 600, fill: COLORS.mute, anchor: 'middle', spacing: 3 });
+  out += text(W / 2, H - 24, "WE'RE ON TOP OF EVERYTHING", { size: 20, weight: 600, fill: COLORS.mute, anchor: 'middle', spacing: 5 });
   return out + '</svg>';
 }
